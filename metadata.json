@@ -1,0 +1,6 @@
+{
+  "name": "Electoral Bing",
+  "description": "Directorio electoral ODPE ICA con búsqueda rápida por voz, marcación directa a coordinadores distritales, miembros de mesa y asignados.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
