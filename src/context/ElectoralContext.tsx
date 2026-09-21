@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useMemo } from '
 import { MesaElectoral, ContactoElectoral, ViewMode } from '../types';
 import { INITIAL_MESAS } from '../data/mockElectoralData';
 import { HD_WALLPAPERS, WallpaperItem } from '../data/wallpapers';
+import { playAppleWindowOpen, playAppleWindowClose, playAppleTap, playAppleWhatsApp, playAppleCall } from '../utils/appleSound';
 
 interface WallpaperConfig {
   imageUrl: string;
@@ -63,7 +64,7 @@ interface ElectoralContextType {
 
 const ElectoralContext = createContext<ElectoralContextType | undefined>(undefined);
 
-const STORAGE_KEY_MESAS = 'electoral_bing_directorio_mesas_v2';
+const STORAGE_KEY_MESAS = 'electoral_bing_directorio_mesas_v4';
 const STORAGE_KEY_DARK_MODE = 'electoral_bing_dark_mode';
 const STORAGE_KEY_WALLPAPER = 'electoral_bing_wallpaper_v1';
 
@@ -74,7 +75,7 @@ export const ElectoralProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       const saved = localStorage.getItem(STORAGE_KEY_MESAS);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length >= 31) return parsed;
       }
     } catch {
       // ignore
@@ -82,11 +83,34 @@ export const ElectoralProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     return INITIAL_MESAS;
   });
 
-  // 2. Filters & View mode
+  // 2. Filters & View mode - Default to 31 Distritos
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [filterDistrito, setFilterDistrito] = useState<string>('Huacachina / Balneario');
-  const [viewMode, setViewMode] = useState<ViewMode>('todas');
-  const [selectedMesa, setSelectedMesa] = useState<MesaElectoral | null>(null);
+  const [filterDistrito, setFilterDistritoState] = useState<string>('');
+  const [viewMode, setViewModeState] = useState<ViewMode>('distritos');
+  const [selectedMesa, setSelectedMesaState] = useState<MesaElectoral | null>(null);
+
+  const setSelectedMesa = (mesa: MesaElectoral | null) => {
+    if (mesa) {
+      playAppleWindowOpen();
+    } else {
+      playAppleWindowClose();
+    }
+    setSelectedMesaState(mesa);
+  };
+
+  const setFilterDistrito = (dist: string) => {
+    if (dist && dist !== filterDistrito) {
+      playAppleWindowOpen();
+    } else if (!dist && filterDistrito) {
+      playAppleTap();
+    }
+    setFilterDistritoState(dist);
+  };
+
+  const setViewMode = (mode: ViewMode) => {
+    if (mode !== viewMode) playAppleTap();
+    setViewModeState(mode);
+  };
 
   // 3. Dark mode state
   const [darkMode, setDarkMode] = useState<boolean>(() => {
@@ -112,7 +136,7 @@ export const ElectoralProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     } catch {
       // ignore
     }
-    return 600; // 10 minutes default (600 seconds)
+    return 180; // 3 minutes default (180 seconds)
   });
 
   const setRotationInterval = (seconds: number) => {
@@ -188,10 +212,31 @@ export const ElectoralProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [immersiveMode, setImmersiveMode] = useState<boolean>(false);
 
   // 6. Modals & Voice state
-  const [showVoiceModal, setShowVoiceModal] = useState<boolean>(false);
-  const [showDbModal, setShowDbModal] = useState<boolean>(false);
-  const [showWallpaperModal, setShowWallpaperModal] = useState<boolean>(false);
-  const [showInstallModal, setShowInstallModal] = useState<boolean>(false);
+  const [showVoiceModal, setShowVoiceModalState] = useState<boolean>(false);
+  const [showDbModal, setShowDbModalState] = useState<boolean>(false);
+  const [showWallpaperModal, setShowWallpaperModalState] = useState<boolean>(false);
+  const [showInstallModal, setShowInstallModalState] = useState<boolean>(false);
+
+  const setShowVoiceModal = (val: boolean) => {
+    if (val) playAppleWindowOpen();
+    else playAppleWindowClose();
+    setShowVoiceModalState(val);
+  };
+  const setShowDbModal = (val: boolean) => {
+    if (val) playAppleWindowOpen();
+    else playAppleWindowClose();
+    setShowDbModalState(val);
+  };
+  const setShowWallpaperModal = (val: boolean) => {
+    if (val) playAppleWindowOpen();
+    else playAppleWindowClose();
+    setShowWallpaperModalState(val);
+  };
+  const setShowInstallModal = (val: boolean) => {
+    if (val) playAppleWindowOpen();
+    else playAppleWindowClose();
+    setShowInstallModalState(val);
+  };
   const [isListening, setIsListening] = useState<boolean>(false);
   const [speechTranscript, setSpeechTranscript] = useState<string>('');
   const [speechError, setSpeechError] = useState<string | null>(null);
@@ -300,6 +345,7 @@ export const ElectoralProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   // Direct 1-Tap Phone Call to Coordinator, Table Member, or Assignee
   const callContact = (phone: string, nombre: string, cargo?: string, mesaOdistrito?: string) => {
+    playAppleCall();
     const cleanPhone = phone.replace(/[^0-9+]/g, '');
     const contextInfo = mesaOdistrito ? ` (${mesaOdistrito})` : '';
     const roleInfo = cargo ? `${cargo} ` : '';
@@ -309,10 +355,10 @@ export const ElectoralProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   // Direct WhatsApp contact
   const sendWhatsApp = (phone: string, nombre: string, cargo?: string, mesaOdistrito?: string) => {
+    // playAppleWhatsApp(); // Audio disabled
     const cleanPhone = phone.replace(/[^0-9]/g, '');
-    const roleText = cargo ? ` como ${cargo}` : '';
-    const contextText = mesaOdistrito ? ` de ${mesaOdistrito}` : '';
-    const text = encodeURIComponent(`Hola ${nombre}, te contacto${roleText}${contextText}. Por favor confírmame tu disponibilidad y estado.`);
+    const mesaText = mesaOdistrito ? mesaOdistrito.replace('Mesa ', '') : 'XX';
+    const text = encodeURIComponent(`Hola ${nombre}, me comunico debido que estas encargado de la mesa n° ${mesaText} y queria comunicarme contigo.`);
     window.open(`https://wa.me/${cleanPhone}?text=${text}`, '_blank');
   };
 
@@ -387,10 +433,11 @@ export const ElectoralProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       });
     }
 
-    // 2. If NOT searching: strictly return tables of the selected district only!
-    // Never show tables from other districts.
-    const activeDist = filterDistrito === 'all' ? (mesas[0]?.distrito || 'Huacachina / Balneario') : filterDistrito;
-    return mesas.filter(mesa => mesa.distrito === activeDist);
+    // 2. If NOT searching: return tables of the selected district, or all mesas if none specified
+    if (!filterDistrito || filterDistrito === 'all') {
+      return mesas;
+    }
+    return mesas.filter(mesa => mesa.distrito === filterDistrito);
   }, [mesas, searchQuery, filterDistrito]);
 
   // Total unique contacts across all loaded mesas

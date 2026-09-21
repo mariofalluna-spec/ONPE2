@@ -207,16 +207,12 @@ export const DatabaseModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/40 backdrop-blur-xs transition-all">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/40 backdrop-blur-md transition-all">
       <div
-        className={`w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl border ${
-          darkMode
-            ? 'bg-slate-950/75 backdrop-blur-xl text-white border-white/20'
-            : 'bg-white/85 backdrop-blur-xl text-slate-900 border-white/60 shadow-slate-900/10'
-        }`}
+        className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl border bg-slate-950/45 backdrop-blur-md text-white border-white/25 shadow-black/70"
       >
         {/* Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
+        <div className="flex items-center justify-between pb-3 border-b border-white/20 mb-4">
           <div className="flex items-center gap-2">
             <div className="p-2 rounded-xl bg-cyan-500/20 text-cyan-400">
               <Database className="w-5 h-5" />
@@ -234,14 +230,14 @@ export const DatabaseModal: React.FC = () => {
           <button
             type="button"
             onClick={() => setShowDbModal(false)}
-            className="p-2 rounded-full hover:bg-white/10 text-slate-400 hover:text-white"
+            className="p-2 rounded-full hover:bg-white/10 text-white/80 hover:text-white"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Tab Selector */}
-        <div className="grid grid-cols-4 gap-1 p-1 bg-black/25 rounded-xl mb-4 text-xs font-semibold">
+        <div className="grid grid-cols-4 gap-1 p-1 bg-white/10 backdrop-blur-md border border-white/15 rounded-xl mb-4 text-xs font-semibold">
           <button
             type="button"
             onClick={() => setActiveTab('upload')}
@@ -285,7 +281,7 @@ export const DatabaseModal: React.FC = () => {
           <div className="space-y-3 text-xs">
             <div
               onClick={() => fileInputRef.current?.click()}
-              className="border-2 border-dashed border-cyan-500/40 hover:border-cyan-400 rounded-2xl p-6 text-center cursor-pointer bg-cyan-950/20 hover:bg-cyan-950/40 transition-colors"
+              className="border-2 border-dashed border-cyan-500/40 hover:border-cyan-400 rounded-2xl p-6 text-center cursor-pointer bg-cyan-950/25 backdrop-blur-md hover:bg-cyan-950/40 transition-colors"
             >
               <Upload className="w-8 h-8 text-cyan-400 mx-auto mb-2" />
               <p className="font-bold text-sm">Toca para seleccionar archivo</p>
@@ -304,7 +300,7 @@ export const DatabaseModal: React.FC = () => {
               />
             </div>
 
-            <div className="p-3 rounded-xl bg-black/20 border border-white/10 space-y-1">
+            <div className="p-3 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 space-y-1">
               <span className="font-bold block text-cyan-300">Formato automático:</span>
               <p className="opacity-80">
                 Puedes subir directamente la base de datos de tu organización con los teléfonos de los coordinadores y miembros de mesa.
@@ -329,7 +325,7 @@ export const DatabaseModal: React.FC = () => {
               <span>Descargar Plantilla CSV para Excel</span>
             </button>
 
-            <div className="p-3 rounded-xl bg-black/25 border border-white/10 font-mono text-[10px] space-y-1 overflow-x-auto">
+            <div className="p-3 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 font-mono text-[10px] space-y-1 overflow-x-auto">
               <span className="font-bold text-cyan-300 block">Columnas requeridas:</span>
               <p>numeroMesa, distrito, localVotacion, aula,</p>
               <p>coordinador_nombre, coordinador_telefono,</p>
@@ -352,7 +348,7 @@ export const DatabaseModal: React.FC = () => {
               value={jsonText}
               onChange={(e) => setJsonText(e.target.value)}
               placeholder="048201,Huacachina / Balneario,C.E. Las Dunas,Aula 101,Renzo Huaman,+51956345678,Carlos Mendoza,+51956123456..."
-              className="w-full p-3 rounded-xl bg-black/35 border border-white/20 text-white font-mono text-xs outline-none focus:border-cyan-400"
+              className="w-full p-3 rounded-xl bg-slate-950/60 backdrop-blur-md border border-white/20 text-white font-mono text-xs outline-none focus:border-cyan-400"
             />
             <button
               type="button"
@@ -373,7 +369,7 @@ export const DatabaseModal: React.FC = () => {
             <button
               type="button"
               onClick={exportCurrentJson}
-              className="w-full py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-white border border-white/20 font-bold flex items-center justify-center gap-2 active:scale-95"
+              className="w-full py-3 px-4 rounded-xl bg-white/10 hover:bg-white/20 backdrop-blur-md text-white border border-white/20 font-bold flex items-center justify-center gap-2 active:scale-95"
             >
               <Download className="w-4 h-4 text-cyan-300" />
               <span>Exportar Directorio (JSON)</span>
@@ -382,7 +378,7 @@ export const DatabaseModal: React.FC = () => {
             <button
               type="button"
               onClick={resetToDefaultData}
-              className="w-full py-2.5 px-4 rounded-xl bg-rose-950/40 hover:bg-rose-950/60 text-rose-300 border border-rose-500/30 font-bold flex items-center justify-center gap-1.5 active:scale-95 text-xs"
+              className="w-full py-2.5 px-4 rounded-xl bg-rose-950/40 hover:bg-rose-950/60 backdrop-blur-md text-rose-300 border border-rose-500/30 font-bold flex items-center justify-center gap-1.5 active:scale-95 text-xs"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               <span>Restablecer a Directorio Inicial (Huacachina / Ica)</span>
@@ -392,7 +388,7 @@ export const DatabaseModal: React.FC = () => {
 
         {/* Status Message */}
         {importStatus && (
-          <div className="mt-3 p-3 rounded-xl bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 text-xs flex items-center gap-2">
+          <div className="mt-3 p-3 rounded-xl bg-cyan-500/20 backdrop-blur-md border border-cyan-500/40 text-cyan-300 text-xs flex items-center gap-2">
             <Check className="w-4 h-4 shrink-0" />
             <span>{importStatus}</span>
           </div>

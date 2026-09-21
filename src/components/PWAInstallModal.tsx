@@ -22,12 +22,12 @@ export const PWAInstallModal: React.FC<PWAInstallModalProps> = ({ isOpen, onClos
   return (
     <div
       id="modal-install-pwa"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md transition-all select-none animate-fadeIn"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-md transition-all select-none animate-fadeIn"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="w-full max-w-sm rounded-3xl bg-slate-900/95 text-white border border-white/20 p-6 shadow-2xl relative overflow-hidden backdrop-blur-xl">
+      <div className="w-full max-w-sm rounded-3xl bg-slate-950/45 text-white border border-white/25 p-6 shadow-2xl relative overflow-hidden backdrop-blur-md shadow-black/70">
         {/* Header decoration glow */}
         <div className="absolute -top-12 -right-12 w-32 h-32 bg-cyan-500/20 rounded-full blur-2xl pointer-events-none" />
         <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-amber-500/20 rounded-full blur-2xl pointer-events-none" />

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { playAppleTap } from '../utils/appleSound';
 
 interface OdpeSunLogoProps {
   className?: string;
@@ -9,6 +10,7 @@ export const OdpeSunLogo: React.FC<OdpeSunLogoProps> = ({ className = '', size =
   const [isManualTrigger, setIsManualTrigger] = useState(false);
 
   const handleTap = () => {
+    playAppleTap();
     setIsManualTrigger(true);
     setTimeout(() => setIsManualTrigger(false), 2000);
   };
@@ -16,110 +18,127 @@ export const OdpeSunLogo: React.FC<OdpeSunLogoProps> = ({ className = '', size =
   return (
     <div
       onClick={handleTap}
-      title="ODPE ICA • Toca para animar el sol"
+      title="ODPE ICA • Sol radiante en movimiento"
       className={`relative inline-flex items-center justify-center cursor-pointer select-none group active:scale-95 transition-transform duration-200 ${className}`}
       style={{ width: size, height: size }}
     >
       <style>{`
-        @keyframes odpeSunCycle {
-          0%, 80%, 100% {
-            transform: scale(1) translateY(0);
-            filter: drop-shadow(0 1px 2px rgba(245, 158, 11, 0.25));
+        @keyframes odpeSunContinuousGlow {
+          0%, 100% {
+            transform: scale(1) rotate(0deg);
+            filter: drop-shadow(0 0 8px rgba(253, 224, 71, 0.85)) drop-shadow(0 0 16px rgba(245, 158, 11, 0.6));
           }
-          85% {
-            transform: scale(1.12) translateY(-1.5px);
-            filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.85)) drop-shadow(0 0 16px rgba(245, 158, 11, 0.5));
-          }
-          90% {
-            transform: scale(1.08) translateY(-0.5px) rotate(3deg);
-            filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.75));
-          }
-          95% {
-            transform: scale(1.04) translateY(-0.2px) rotate(-1.5deg);
-            filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.6));
+          50% {
+            transform: scale(1.08) rotate(5deg);
+            filter: drop-shadow(0 0 14px rgba(255, 255, 255, 0.95)) drop-shadow(0 0 24px rgba(251, 191, 36, 0.85));
           }
         }
 
-        @keyframes odpeRaysPulse {
-          0%, 80%, 100% {
+        @keyframes odpeRaysShimmer {
+          0%, 100% {
             transform: scale(1);
-            opacity: 0.92;
+            opacity: 0.9;
           }
-          85% {
-            transform: scale(1.14);
+          30% {
+            transform: scale(1.15) rotate(2deg);
             opacity: 1;
           }
-          92% {
-            transform: scale(1.06);
-            opacity: 0.98;
+          60% {
+            transform: scale(1.22) rotate(-2deg);
+            opacity: 1;
+          }
+          85% {
+            transform: scale(1.08);
+            opacity: 0.95;
+          }
+        }
+
+        @keyframes odpeGlowHalo {
+          0%, 100% {
+            transform: scale(0.9);
+            opacity: 0.6;
+          }
+          50% {
+            transform: scale(1.3);
+            opacity: 1;
           }
         }
 
         @keyframes odpeWaveShift {
-          0%, 80%, 100% {
+          0%, 100% {
             transform: translateX(0) scaleY(1);
           }
-          85% {
-            transform: translateX(1px) scaleY(1.15) translateY(-0.8px);
+          35% {
+            transform: translateX(1.5px) scaleY(1.18) translateY(-1px);
           }
-          93% {
-            transform: translateX(-0.8px) scaleY(1.08);
+          70% {
+            transform: translateX(-1.5px) scaleY(1.12);
           }
         }
 
         .odpe-sun-animated {
-          animation: odpeSunCycle 10s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
-          transform-origin: 50% 60%;
+          animation: odpeSunContinuousGlow 4s ease-in-out infinite;
+          transform-origin: 50% 55%;
         }
 
         .odpe-rays-animated {
-          animation: odpeRaysPulse 10s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
+          animation: odpeRaysShimmer 4s ease-in-out infinite;
+          transform-origin: 50% 55%;
+        }
+
+        .odpe-halo-animated {
+          animation: odpeGlowHalo 4s ease-in-out infinite;
           transform-origin: 50% 55%;
         }
 
         .odpe-wave-animated {
-          animation: odpeWaveShift 10s ease-in-out infinite;
+          animation: odpeWaveShift 4s ease-in-out infinite;
           transform-origin: 50% 75%;
         }
 
         .odpe-manual-burst {
-          animation: odpeSunCycle 2s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+          animation: odpeSunContinuousGlow 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
         }
       `}</style>
 
-      {/* iPhone-Style Glass Pod Backdrop */}
-      <div className="absolute inset-0 rounded-2xl bg-amber-500/10 backdrop-blur-xs border border-amber-400/25 group-hover:bg-amber-500/20 transition-all duration-300 shadow-xs" />
+      {/* Bright Radial Sun Glow Backdrop */}
+      <div className="absolute inset-0 rounded-full bg-amber-400/30 odpe-halo-animated blur-md pointer-events-none" />
 
-      {/* SVG Vector Matching Exact Attached Sunset Concept */}
+      {/* Glass Pod Backdrop */}
+      <div className="absolute inset-0 rounded-2xl bg-amber-500/15 backdrop-blur-xs border border-amber-300/40 group-hover:bg-amber-500/30 transition-all duration-300 shadow-sm" />
+
+      {/* SVG Vector Matching Attached Sunset Concept */}
       <svg
         viewBox="0 0 100 100"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        className={`w-full h-full p-1.5 transition-all duration-300 relative z-10 ${
+        className={`w-full h-full p-1 transition-all duration-300 relative z-10 ${
           isManualTrigger ? 'odpe-manual-burst' : 'odpe-sun-animated'
         }`}
       >
         <defs>
           <linearGradient id="odpeSunGradient" x1="20" y1="20" x2="80" y2="80" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#FDE047" />
-            <stop offset="50%" stopColor="#FBBF24" />
+            <stop offset="0%" stopColor="#FFFFFF" />
+            <stop offset="25%" stopColor="#FEF08A" />
+            <stop offset="65%" stopColor="#FBBF24" />
             <stop offset="100%" stopColor="#F59E0B" />
           </linearGradient>
 
           <linearGradient id="odpeRaysGradient" x1="10" y1="10" x2="90" y2="90" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#FEF08A" />
-            <stop offset="60%" stopColor="#FBBF24" />
+            <stop offset="0%" stopColor="#FFFFFF" />
+            <stop offset="35%" stopColor="#FEF08A" />
+            <stop offset="70%" stopColor="#FBBF24" />
             <stop offset="100%" stopColor="#F59E0B" />
           </linearGradient>
 
           <linearGradient id="odpeWaveGradient" x1="15" y1="65" x2="85" y2="75" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#FBBF24" />
+            <stop offset="0%" stopColor="#FDE047" />
             <stop offset="50%" stopColor="#F59E0B" />
             <stop offset="100%" stopColor="#D97706" />
           </linearGradient>
         </defs>
 
-        {/* 1. RADIATING RAYS (Exact 9-ray layout from attached graphic) */}
+        {/* 1. RADIATING RAYS */}
         <g className="odpe-rays-animated">
           {/* Ray 1: Left Horizontal (~180°) */}
           <line
@@ -128,7 +147,7 @@ export const OdpeSunLogo: React.FC<OdpeSunLogoProps> = ({ className = '', size =
             x2="28"
             y2="57.5"
             stroke="url(#odpeRaysGradient)"
-            strokeWidth="3.4"
+            strokeWidth="3.6"
             strokeLinecap="round"
           />
 
@@ -139,7 +158,7 @@ export const OdpeSunLogo: React.FC<OdpeSunLogoProps> = ({ className = '', size =
             x2="31"
             y2="47"
             stroke="url(#odpeRaysGradient)"
-            strokeWidth="3.4"
+            strokeWidth="3.6"
             strokeLinecap="round"
           />
 
@@ -150,7 +169,7 @@ export const OdpeSunLogo: React.FC<OdpeSunLogoProps> = ({ className = '', size =
             x2="38"
             y2="37"
             stroke="url(#odpeRaysGradient)"
-            strokeWidth="3.5"
+            strokeWidth="3.8"
             strokeLinecap="round"
           />
 
@@ -161,7 +180,7 @@ export const OdpeSunLogo: React.FC<OdpeSunLogoProps> = ({ className = '', size =
             x2="45.5"
             y2="29"
             stroke="url(#odpeRaysGradient)"
-            strokeWidth="3.5"
+            strokeWidth="3.8"
             strokeLinecap="round"
           />
 
@@ -172,7 +191,7 @@ export const OdpeSunLogo: React.FC<OdpeSunLogoProps> = ({ className = '', size =
             x2="50"
             y2="26"
             stroke="url(#odpeRaysGradient)"
-            strokeWidth="3.6"
+            strokeWidth="4"
             strokeLinecap="round"
           />
 
@@ -183,7 +202,7 @@ export const OdpeSunLogo: React.FC<OdpeSunLogoProps> = ({ className = '', size =
             x2="54.5"
             y2="29"
             stroke="url(#odpeRaysGradient)"
-            strokeWidth="3.5"
+            strokeWidth="3.8"
             strokeLinecap="round"
           />
 
@@ -194,7 +213,7 @@ export const OdpeSunLogo: React.FC<OdpeSunLogoProps> = ({ className = '', size =
             x2="62"
             y2="37"
             stroke="url(#odpeRaysGradient)"
-            strokeWidth="3.5"
+            strokeWidth="3.8"
             strokeLinecap="round"
           />
 
@@ -205,7 +224,7 @@ export const OdpeSunLogo: React.FC<OdpeSunLogoProps> = ({ className = '', size =
             x2="69"
             y2="47"
             stroke="url(#odpeRaysGradient)"
-            strokeWidth="3.4"
+            strokeWidth="3.6"
             strokeLinecap="round"
           />
 
@@ -216,7 +235,7 @@ export const OdpeSunLogo: React.FC<OdpeSunLogoProps> = ({ className = '', size =
             x2="72"
             y2="57.5"
             stroke="url(#odpeRaysGradient)"
-            strokeWidth="3.4"
+            strokeWidth="3.6"
             strokeLinecap="round"
           />
         </g>
@@ -225,16 +244,16 @@ export const OdpeSunLogo: React.FC<OdpeSunLogoProps> = ({ className = '', size =
         <path
           d="M 27 60 C 27 40 37.3 30 50 30 C 62.7 30 73 40 73 60"
           stroke="url(#odpeSunGradient)"
-          strokeWidth="4.2"
+          strokeWidth="4.4"
           strokeLinecap="round"
         />
 
-        {/* 3. MINIMALIST DUNE / WATER WAVE CURVE (Underneath the sun) */}
+        {/* 3. DUNE / WAVE CURVE (Underneath the sun) */}
         <path
           className="odpe-wave-animated"
           d="M 22 75 C 34 75 42 73 48 68 C 53 64 58 64 57 70 C 56 74 64 76 74 74 C 77 73.5 82 72.5 83 72.5"
           stroke="url(#odpeWaveGradient)"
-          strokeWidth="3.6"
+          strokeWidth="3.8"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
@@ -242,3 +261,4 @@ export const OdpeSunLogo: React.FC<OdpeSunLogoProps> = ({ className = '', size =
     </div>
   );
 };
+

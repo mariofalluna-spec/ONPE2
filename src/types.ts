@@ -45,4 +45,4 @@ export interface MesaElectoral {
   observacionContacto?: string;
 }
 
-export type ViewMode = 'todas' | 'coordinadores' | 'miembros' | 'asignados';
+export type ViewMode = 'distritos' | 'todas' | 'coordinadores' | 'miembros' | 'asignados';

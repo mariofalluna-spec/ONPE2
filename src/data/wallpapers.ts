@@ -63,4 +63,62 @@ export const HD_WALLPAPERS: WallpaperItem[] = [
     imageUrl: '/wallpapers/huacachina.jpg',
     districtTag: 'Huacachina',
   },
+  {
+    id: 'atardecer',
+    title: 'Atardecer en las Dunas',
+    location: 'Ica',
+    imageUrl: '/wallpapers/wallpaper_1.jpg',
+    districtTag: 'Ica',
+  },
+  {
+    id: 'paisaje',
+    title: 'Paisaje Iqueño',
+    location: 'Ica',
+    imageUrl: '/wallpapers/wallpaper_2.jpg',
+    districtTag: 'Ica',
+  },
+  {
+    id: 'vista',
+    title: 'Vista Turística',
+    location: 'Ica',
+    imageUrl: '/wallpapers/wallpaper_3.jpg',
+    districtTag: 'Ica',
+  },
+  {
+    id: 'desierto',
+    title: 'Desierto',
+    location: 'Ica',
+    imageUrl: '/wallpapers/wallpaper_4.jpg',
+    districtTag: 'Ica',
+  },
+  {
+    id: 'roca',
+    title: 'Formación Rocosa',
+    location: 'Ica',
+    imageUrl: '/wallpapers/wallpaper_5.jpg',
+    districtTag: 'Ica',
+  },
+  {
+    id: 'lineas',
+    title: 'Líneas',
+    location: 'Ica',
+    imageUrl: '/wallpapers/wallpaper_6.jpg',
+    districtTag: 'Ica',
+  },
+  {
+    id: 'estrellas',
+    title: 'Cielo Estrellado',
+    location: 'Ica',
+    imageUrl: '/wallpapers/wallpaper_7.jpg',
+    districtTag: 'Ica',
+  },
+  {
+    id: 'aventura',
+    title: 'Aventura en las Dunas',
+    location: 'Ica',
+    imageUrl: '/wallpapers/wallpaper_8.jpg',
+    districtTag: 'Ica',
+  },
 ];
+
+

@@ -17,13 +17,9 @@ export const VoiceSearchModal: React.FC = () => {
   if (!showVoiceModal) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/45 backdrop-blur-sm transition-all">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-md transition-all">
       <div
-        className={`w-full max-w-sm rounded-3xl p-6 text-center shadow-2xl border transition-all ${
-          darkMode
-            ? 'bg-slate-950/80 backdrop-blur-xl text-white border-white/20'
-            : 'bg-white/90 backdrop-blur-xl text-slate-900 border-white/40'
-        }`}
+        className="w-full max-w-sm rounded-3xl p-6 text-center shadow-2xl border transition-all bg-slate-950/45 backdrop-blur-md text-white border-white/25 shadow-black/70"
       >
         {/* Close Button */}
         <div className="flex justify-end mb-2">
@@ -31,7 +27,7 @@ export const VoiceSearchModal: React.FC = () => {
             type="button"
             onClick={() => setShowVoiceModal(false)}
             aria-label="Cerrar modal de voz"
-            className="p-1.5 rounded-full hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
+            className="p-1.5 rounded-full hover:bg-white/10 text-white/80 hover:text-white transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -88,7 +84,7 @@ export const VoiceSearchModal: React.FC = () => {
         )}
 
         {/* Live Transcription / Error */}
-        <div className="min-h-[56px] px-3 py-2 rounded-xl bg-black/30 border border-white/10 mb-6 flex items-center justify-center text-sm font-medium">
+        <div className="min-h-[56px] px-3 py-2 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 mb-6 flex items-center justify-center text-sm font-medium">
           {speechError ? (
             <div className="text-rose-400 text-xs flex items-center gap-1.5 text-left">
               <AlertCircle className="w-4 h-4 shrink-0" />

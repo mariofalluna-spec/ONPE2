@@ -65,16 +65,12 @@ export const WallpaperSettingsModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/45 backdrop-blur-xs transition-all">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/40 backdrop-blur-md transition-all">
       <div
-        className={`w-full max-w-md max-h-[90vh] overflow-y-auto rounded-3xl p-5 shadow-2xl border transition-all ${
-          darkMode
-            ? 'bg-slate-950/80 backdrop-blur-xl text-white border-white/20'
-            : 'bg-white/90 backdrop-blur-xl text-slate-900 border-white/60 shadow-slate-900/10'
-        }`}
+        className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-3xl p-5 shadow-2xl border transition-all bg-slate-950/45 backdrop-blur-md text-white border-white/25 shadow-black/70"
       >
         {/* Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-3.5">
+        <div className="flex items-center justify-between pb-3 border-b border-white/20 mb-3.5">
           <div className="flex items-center gap-2">
             <div className="p-2 rounded-xl bg-amber-500/20 text-amber-300">
               <ImageIcon className="w-4 h-4" />
@@ -92,7 +88,7 @@ export const WallpaperSettingsModal: React.FC = () => {
           <button
             type="button"
             onClick={() => setShowWallpaperModal(false)}
-            className="p-1.5 rounded-full hover:bg-white/10 text-slate-400 hover:text-white"
+            className="p-1.5 rounded-full hover:bg-white/10 text-white/80 hover:text-white"
           >
             <X className="w-5 h-5" />
           </button>
@@ -129,7 +125,7 @@ export const WallpaperSettingsModal: React.FC = () => {
           </button>
 
           {/* Landscape info banner */}
-          <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between px-2.5 py-1.5 rounded-xl bg-black/60 backdrop-blur-md text-white text-[11px]">
+          <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between px-2.5 py-1.5 rounded-xl bg-slate-950/60 backdrop-blur-md text-white text-[11px] border border-white/15">
             <div className="flex items-center gap-1.5 truncate">
               <MapPin className="w-3.5 h-3.5 text-amber-300 shrink-0" />
               <span className="font-bold truncate">{currentWallpaperItem.title}</span>
@@ -141,7 +137,7 @@ export const WallpaperSettingsModal: React.FC = () => {
         </div>
 
         {/* Auto-Rotation Controls (Every 10 Seconds) */}
-        <div className="p-3 rounded-2xl bg-black/20 border border-white/10 mb-4 space-y-2.5">
+        <div className="p-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 mb-4 space-y-2.5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className={`p-1.5 rounded-lg ${autoRotateWallpapers ? 'bg-emerald-500/20 text-emerald-300' : 'bg-white/10 text-white/60'}`}>
@@ -174,11 +170,11 @@ export const WallpaperSettingsModal: React.FC = () => {
           <div className="flex flex-wrap items-center gap-1.5 pt-1">
             <span className="text-[10px] opacity-80 mr-1">Frecuencia:</span>
             {[
-              { label: '10 min (Predet.)', sec: 600 },
-              { label: '5 min', sec: 300 },
+              { label: '5 min (Predet.)', sec: 300 },
+              { label: '10 min', sec: 600 },
+              { label: '15 min', sec: 900 },
               { label: '1 min', sec: 60 },
               { label: '30 seg', sec: 30 },
-              { label: '10 seg', sec: 10 },
             ].map(item => (
               <button
                 key={item.sec}
@@ -245,7 +241,7 @@ export const WallpaperSettingsModal: React.FC = () => {
         </div>
 
         {/* Controls: Dim & Blur */}
-        <div className="space-y-3 mb-4 text-xs bg-black/15 p-3 rounded-2xl border border-white/10">
+        <div className="space-y-3 mb-4 text-xs bg-white/10 backdrop-blur-md p-3 rounded-2xl border border-white/20">
           {/* Opacity / Dim slider */}
           <div>
             <div className="flex justify-between font-semibold mb-1">
@@ -304,7 +300,7 @@ export const WallpaperSettingsModal: React.FC = () => {
           <button
             type="button"
             onClick={resetToDefaultWallpaper}
-            className="w-full py-2 rounded-xl bg-black/20 hover:bg-black/30 text-xs font-semibold flex items-center justify-center gap-1.5 border border-white/10 active:scale-95 transition-all"
+            className="w-full py-2 rounded-xl bg-white/10 hover:bg-white/20 backdrop-blur-md text-xs font-semibold flex items-center justify-center gap-1.5 border border-white/20 active:scale-95 transition-all text-white"
           >
             <RotateCcw className="w-3.5 h-3.5" />
             <span>Restablecer rotación cada 10 min (Full HD)</span>

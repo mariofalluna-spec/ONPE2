@@ -1,7 +1,8 @@
 import React from 'react';
-import { Phone, MessageCircle, Building, Users, Shield, PhoneCall } from 'lucide-react';
+import { Phone, Building, Users, Shield, PhoneCall } from 'lucide-react';
 import { useElectoral } from '../context/ElectoralContext';
 import { ContactoElectoral } from '../types';
+import { WhatsAppAppIcon } from './WhatsAppAppIcon';
 
 export const GestoresView: React.FC = () => {
   const { filteredMesas, darkMode, callContact, sendWhatsApp, viewMode } = useElectoral();
@@ -89,33 +90,29 @@ export const GestoresView: React.FC = () => {
           {coordinadores.map(({ contacto, distrito, mesas }) => (
             <div
               key={contacto.id || contacto.telefono}
-              className={`p-3 rounded-2xl border backdrop-blur-md transition-all ${
-                darkMode
-                  ? 'bg-black/15 hover:bg-black/25 border-white/20 text-white shadow-md'
-                  : 'bg-white/25 hover:bg-white/35 border-white/40 text-white shadow-sm'
-              }`}
+              className="p-3 rounded-2xl border border-white/20 hover:border-cyan-300/80 bg-white/10 hover:bg-white/15 text-white backdrop-blur-md shadow-sm transition-all"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5 mb-0.5">
-                    <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                    <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-black/40 text-cyan-200 border border-cyan-400/40">
                       Coordinador Distrital
                     </span>
-                    <span className="text-[11px] font-semibold opacity-85 truncate">
+                    <span className="text-[11px] font-semibold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)] truncate">
                       {distrito}
                     </span>
                   </div>
 
-                  <h3 className="font-bold text-xs tracking-tight truncate">
+                  <h3 className="font-bold text-xs tracking-tight truncate text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
                     {contacto.nombre}
                   </h3>
 
-                  <p className="font-mono text-xs font-bold text-cyan-300">
+                  <p className="font-mono text-xs font-bold text-cyan-300 drop-shadow-xs">
                     {contacto.telefono}
                   </p>
 
-                  <div className="flex items-center gap-1 text-[10px] opacity-75 mt-1 truncate">
-                    <Building className="w-3 h-3 shrink-0 text-cyan-400" />
+                  <div className="flex items-center gap-1 text-[10px] text-white/80 mt-1 truncate">
+                    <Building className="w-3 h-3 shrink-0 text-cyan-300" />
                     <span>Mesas: {mesas.join(', ')}</span>
                   </div>
                 </div>
@@ -134,9 +131,10 @@ export const GestoresView: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => sendWhatsApp(contacto.telefono, contacto.nombre, 'Coordinador Distrital', distrito)}
-                    className="p-1.5 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 active:scale-95"
+                    className="p-1.5 rounded-xl bg-emerald-600/30 hover:bg-emerald-600/40 text-emerald-300 border border-emerald-400/30 active:scale-95 flex items-center justify-center transition-all shadow-xs"
+                    title="WhatsApp al coordinador"
                   >
-                    <MessageCircle className="w-3.5 h-3.5" />
+                    <WhatsAppAppIcon size={18} />
                   </button>
                 </div>
               </div>
@@ -151,32 +149,28 @@ export const GestoresView: React.FC = () => {
           {miembros.map(({ contacto, mesaNumero, distrito, local }, idx) => (
             <div
               key={`${contacto.id}-${idx}`}
-              className={`p-2.5 rounded-2xl border backdrop-blur-md transition-all ${
-                darkMode
-                  ? 'bg-black/15 hover:bg-black/25 border-white/20 text-white shadow-xs'
-                  : 'bg-white/25 hover:bg-white/35 border-white/40 text-white shadow-xs'
-              }`}
+              className="p-2.5 rounded-2xl border border-white/20 hover:border-cyan-300/80 bg-white/10 hover:bg-white/15 text-white backdrop-blur-md shadow-xs transition-all"
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5 mb-0.5">
-                    <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                    <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-black/40 text-cyan-200 border border-cyan-400/40">
                       Mesa {mesaNumero}
                     </span>
-                    <span className="text-[10px] font-bold text-amber-300">
+                    <span className="text-[10px] font-bold text-amber-200 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
                       {contacto.cargo}
                     </span>
                   </div>
 
-                  <h3 className="font-bold text-xs truncate">
+                  <h3 className="font-bold text-xs truncate text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
                     {contacto.nombre}
                   </h3>
 
-                  <p className="font-mono text-xs font-semibold text-cyan-300">
+                  <p className="font-mono text-xs font-semibold text-cyan-300 drop-shadow-xs">
                     {contacto.telefono}
                   </p>
 
-                  <p className="text-[10px] opacity-70 truncate">
+                  <p className="text-[10px] text-white/80 truncate">
                     {local} • {distrito}
                   </p>
                 </div>
@@ -194,9 +188,10 @@ export const GestoresView: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => sendWhatsApp(contacto.telefono, contacto.nombre, contacto.cargo, `Mesa ${mesaNumero}`)}
-                    className="p-1.5 rounded-xl bg-emerald-600/20 text-emerald-300 border border-emerald-500/30 active:scale-95"
+                    className="p-1.5 rounded-xl bg-emerald-600/30 hover:bg-emerald-600/40 border border-emerald-400/30 active:scale-95 flex items-center justify-center transition-all shadow-xs"
+                    title={`WhatsApp a ${contacto.nombre}`}
                   >
-                    <MessageCircle className="w-3.5 h-3.5" />
+                    <WhatsAppAppIcon size={18} />
                   </button>
                 </div>
               </div>
@@ -212,32 +207,28 @@ export const GestoresView: React.FC = () => {
             asignados.map(({ contacto, mesaNumero, distrito, local }, idx) => (
               <div
                 key={`${contacto.id}-${idx}`}
-                className={`p-2.5 rounded-2xl border backdrop-blur-md transition-all ${
-                  darkMode
-                    ? 'bg-black/15 hover:bg-black/25 border-white/20 text-white shadow-xs'
-                    : 'bg-white/25 hover:bg-white/35 border-white/40 text-white shadow-xs'
-                }`}
+                className="p-2.5 rounded-2xl border border-white/20 hover:border-cyan-300/80 bg-white/10 hover:bg-white/15 text-white backdrop-blur-md shadow-xs transition-all"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5 mb-0.5">
-                      <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                      <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-black/40 text-cyan-200 border border-cyan-400/40">
                         Mesa {mesaNumero}
                       </span>
-                      <span className="text-[10px] font-bold text-cyan-300">
+                      <span className="text-[10px] font-bold text-cyan-300 drop-shadow-xs">
                         {contacto.cargo}
                       </span>
                     </div>
 
-                    <h3 className="font-bold text-xs truncate">
+                    <h3 className="font-bold text-xs truncate text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
                       {contacto.nombre}
                     </h3>
 
-                    <p className="font-mono text-xs font-semibold text-slate-300">
+                    <p className="font-mono text-xs font-semibold text-slate-200 drop-shadow-xs">
                       {contacto.telefono}
                     </p>
 
-                    <p className="text-[10px] opacity-70 truncate">
+                    <p className="text-[10px] text-white/80 truncate">
                       {local} • {distrito}
                     </p>
                   </div>
@@ -255,16 +246,17 @@ export const GestoresView: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => sendWhatsApp(contacto.telefono, contacto.nombre, contacto.cargo, `Mesa ${mesaNumero}`)}
-                      className="p-1.5 rounded-xl bg-emerald-600/20 text-emerald-300 border border-emerald-500/30 active:scale-95"
+                      className="p-1.5 rounded-xl bg-emerald-600/30 hover:bg-emerald-600/40 border border-emerald-400/30 active:scale-95 flex items-center justify-center transition-all shadow-xs"
+                      title={`WhatsApp a ${contacto.nombre}`}
                     >
-                      <MessageCircle className="w-3.5 h-3.5" />
+                      <WhatsAppAppIcon size={18} />
                     </button>
                   </div>
                 </div>
               </div>
             ))
           ) : (
-            <div className="p-6 rounded-2xl text-center border border-white/10 bg-black/30 backdrop-blur-md">
+            <div className="p-6 rounded-2xl text-center border border-white/20 bg-white/10 backdrop-blur-md text-white shadow-lg">
               <Shield className="w-7 h-7 text-cyan-400 mx-auto mb-2 opacity-80" />
               <p className="font-bold text-xs">No hay asignados registrados aún</p>
               <p className="text-[11px] opacity-70 mt-1">
