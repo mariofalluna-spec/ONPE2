@@ -4,6 +4,8 @@ import { useElectoral } from '../context/ElectoralContext';
 import { LISTA_31_DISTRITOS, DistritoInfo } from '../data/mockElectoralData';
 import { WhatsAppAppIcon } from './WhatsAppAppIcon';
 
+type ProvinciaFilter = 'TODOS' | 'Ica' | 'Nasca' | 'Palpa';
+
 export const DistritosGrid: React.FC = () => {
   const {
     filterDistrito,
@@ -15,6 +17,7 @@ export const DistritosGrid: React.FC = () => {
   } = useElectoral();
 
   const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
+  const [selectedProvincia, setSelectedProvincia] = useState<ProvinciaFilter>('TODOS');
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -36,13 +39,22 @@ export const DistritosGrid: React.FC = () => {
   const getShortName = (nombre: string) => {
     return nombre
       .replace(' (Cercado)', '')
+      .replace('San José de los Molinos', 'Los Molinos')
       .replace('San José de Los Molinos', 'Los Molinos')
       .replace('San Juan Bautista', 'San Juan B.')
       .replace('Yauca del Rosario', 'Yauca Rosario');
   };
 
+  const filteredDistritos = selectedProvincia === 'TODOS'
+    ? LISTA_31_DISTRITOS
+    : LISTA_31_DISTRITOS.filter(d => d.provincia === selectedProvincia);
+
+  const icaCount = LISTA_31_DISTRITOS.filter(d => d.provincia === 'Ica').length;
+  const nascaCount = LISTA_31_DISTRITOS.filter(d => d.provincia === 'Nasca').length;
+  const palpaCount = LISTA_31_DISTRITOS.filter(d => d.provincia === 'Palpa').length;
+
   return (
-    <div className="w-full px-2 sm:px-3 space-y-1 pb-1">
+    <div className="w-full px-2 sm:px-3 space-y-1.5 pb-1">
       {/* Executive Header - Refined, Polished & Offline-Ready */}
       <div className="flex items-center justify-between px-1 py-0.5 text-white leading-none">
         <div className="flex items-center gap-2">
@@ -57,6 +69,54 @@ export const DistritosGrid: React.FC = () => {
               <span className="text-cyan-300 font-extrabold tracking-wider">ODPE ICA</span>
             </h2>
           </div>
+        </div>
+
+        {/* Province Quick Filter Chips (Ica, Nasca, Palpa) */}
+        <div className="flex items-center gap-1 bg-slate-950/40 p-0.5 rounded-lg border border-white/20 backdrop-blur-md">
+          <button
+            type="button"
+            onClick={() => setSelectedProvincia('TODOS')}
+            className={`px-2 py-0.5 rounded-md text-[9.5px] font-black transition-all ${
+              selectedProvincia === 'TODOS'
+                ? 'bg-cyan-500 text-slate-950 shadow-sm'
+                : 'text-slate-300 hover:text-white hover:bg-white/10'
+            }`}
+          >
+            TODOS (31)
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelectedProvincia('Ica')}
+            className={`px-2 py-0.5 rounded-md text-[9.5px] font-black transition-all ${
+              selectedProvincia === 'Ica'
+                ? 'bg-blue-500 text-white shadow-sm'
+                : 'text-slate-300 hover:text-white hover:bg-white/10'
+            }`}
+          >
+            ICA ({icaCount})
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelectedProvincia('Nasca')}
+            className={`px-2 py-0.5 rounded-md text-[9.5px] font-black transition-all ${
+              selectedProvincia === 'Nasca'
+                ? 'bg-amber-500 text-slate-950 shadow-sm'
+                : 'text-slate-300 hover:text-white hover:bg-white/10'
+            }`}
+          >
+            NASCA ({nascaCount})
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelectedProvincia('Palpa')}
+            className={`px-2 py-0.5 rounded-md text-[9.5px] font-black transition-all ${
+              selectedProvincia === 'Palpa'
+                ? 'bg-emerald-500 text-slate-950 shadow-sm'
+                : 'text-slate-300 hover:text-white hover:bg-white/10'
+            }`}
+          >
+            PALPA ({palpaCount})
+          </button>
         </div>
 
         {/* Offline / Sin Señal Status Indicator */}
@@ -82,13 +142,20 @@ export const DistritosGrid: React.FC = () => {
         </div>
       </div>
 
-      {/* 31 DISTRICTS IN VIBRANT HIGH-CONTRAST ULTRA-SLIM CARDS */}
+      {/* 31 DISTRICTS IN EXACT PROVINCIAL ORDER (ICA -> NASCA -> PALPA) */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-1">
-        {LISTA_31_DISTRITOS.map((dist) => {
+        {filteredDistritos.map((dist) => {
           const liveMesasCount = mesas.filter((m) => m.distrito === dist.nombre).length || dist.mesasCount;
           const isSelected = filterDistrito === dist.nombre;
           const shortName = getShortName(dist.nombre);
           const encargadoNombre = dist.coordinadorNombre.replace(/^(Lic\.|Ing\.|Prof\.|Mag\.|Abog\.)\s*/, '');
+
+          // Provincial badge styling
+          const provBadgeColor = dist.provincia === 'Ica'
+            ? 'border-sky-400/40 text-sky-200'
+            : dist.provincia === 'Nasca'
+            ? 'border-amber-400/50 text-amber-200'
+            : 'border-emerald-400/50 text-emerald-200';
 
           return (
             <div
@@ -96,14 +163,14 @@ export const DistritosGrid: React.FC = () => {
               id={`distrito-card-${dist.id}`}
               role="button"
               tabIndex={0}
-              title={`${dist.nombre} (${dist.provincia}) - ${liveMesasCount} mesas - Encargado: ${dist.coordinadorNombre}`}
+              title={`${dist.nombre} (Provincia ${dist.provincia}) - ${liveMesasCount} mesas - Coordinador: ${dist.coordinadorNombre}`}
               onClick={() => handleSelectDistrito(dist)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                   handleSelectDistrito(dist);
                 }
               }}
-              className={`group relative h-[33px] px-2 py-0.5 rounded-lg border flex items-center justify-between gap-1.5 transition-all duration-150 active:scale-95 cursor-pointer select-none shadow-sm ${
+              className={`group relative h-[34px] px-2 py-0.5 rounded-lg border flex items-center justify-between gap-1.5 transition-all duration-150 active:scale-95 cursor-pointer select-none shadow-sm ${
                 isSelected
                   ? 'bg-cyan-500/25 border-cyan-300 ring-1.5 ring-cyan-300/80 text-white shadow-cyan-500/20 shadow-md backdrop-blur-md'
                   : 'bg-slate-950/35 hover:bg-slate-950/50 border-white/20 hover:border-cyan-300/80 text-white hover:shadow-md backdrop-blur-md'
@@ -111,15 +178,21 @@ export const DistritosGrid: React.FC = () => {
             >
               {/* Left Column: Mesas count (Cyan badge), District Name (Pure White) & Encargado (Warm Amber) */}
               <div className="min-w-0 flex-1 flex flex-col justify-center text-left leading-tight">
-                <div className="flex items-center gap-1.5 min-w-0">
+                <div className="flex items-center gap-1 min-w-0">
                   <span
                     title={`${liveMesasCount} mesas`}
-                    className="text-[9.5px] font-mono font-black text-cyan-200 shrink-0 bg-black/40 px-1.5 py-0.2 rounded border border-cyan-400/40 shadow-xs"
+                    className="text-[9px] font-mono font-black text-cyan-200 shrink-0 bg-black/40 px-1 py-0.2 rounded border border-cyan-400/40 shadow-xs"
                   >
                     {liveMesasCount}
                   </span>
                   <span className="text-[10.5px] font-black text-white truncate leading-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
                     {shortName}
+                  </span>
+                  <span
+                    title={`Provincia de ${dist.provincia}`}
+                    className={`text-[7.5px] font-bold uppercase px-1 py-0 rounded bg-black/35 border ${provBadgeColor} shrink-0 hidden sm:inline-block`}
+                  >
+                    {dist.provincia.slice(0, 3)}
                   </span>
                 </div>
                 <div className="text-[8.5px] font-semibold text-amber-200 truncate leading-none mt-0.5 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">

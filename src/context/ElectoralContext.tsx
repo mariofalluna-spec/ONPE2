@@ -64,7 +64,7 @@ interface ElectoralContextType {
 
 const ElectoralContext = createContext<ElectoralContextType | undefined>(undefined);
 
-const STORAGE_KEY_MESAS = 'electoral_bing_directorio_mesas_v4';
+const STORAGE_KEY_MESAS = 'electoral_bing_directorio_mesas_v6';
 const STORAGE_KEY_DARK_MODE = 'electoral_bing_dark_mode';
 const STORAGE_KEY_WALLPAPER = 'electoral_bing_wallpaper_v1';
 
