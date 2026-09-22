@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { MesaElectoral, ContactoElectoral, ViewMode } from '../types';
 import { INITIAL_MESAS } from '../data/mockElectoralData';
-import { HD_WALLPAPERS, WallpaperItem } from '../data/wallpapers';
+import { HD_WALLPAPERS, WallpaperItem, HUACACHINA_WALLPAPER } from '../data/wallpapers';
 import { playAppleWindowOpen, playAppleWindowClose, playAppleTap, playAppleWhatsApp, playAppleCall } from '../utils/appleSound';
 
 interface WallpaperConfig {
@@ -66,7 +66,7 @@ const ElectoralContext = createContext<ElectoralContextType | undefined>(undefin
 
 const STORAGE_KEY_MESAS = 'electoral_bing_directorio_mesas_v11';
 const STORAGE_KEY_DARK_MODE = 'electoral_bing_dark_mode';
-const STORAGE_KEY_WALLPAPER = 'electoral_bing_wallpaper_v1';
+const STORAGE_KEY_WALLPAPER = 'electoral_bing_wallpaper_v5_huacachina';
 
 export const ElectoralProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // 1. Mesas and directory state with localStorage
@@ -123,90 +123,72 @@ export const ElectoralProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     return true; // Default to dark mode for stunning contrast with Huacachina wallpaper
   });
 
-  // 4. Wallpaper state
+  // 4. Wallpaper state - Single official Huacachina Milky Way wallpaper
   const [wallpaperIndex, setWallpaperIndex] = useState<number>(0);
-  const [autoRotateWallpapers, setAutoRotateWallpapers] = useState<boolean>(true);
-  const [rotationInterval, setRotationIntervalState] = useState<number>(() => {
-    try {
-      const saved = localStorage.getItem('odpe_wallpaper_interval');
-      if (saved) {
-        const parsed = parseInt(saved, 10);
-        if (!isNaN(parsed) && parsed > 0) return parsed;
-      }
-    } catch {
-      // ignore
-    }
-    return 180; // 3 minutes default (180 seconds)
-  });
+  const [autoRotateWallpapers, setAutoRotateWallpapers] = useState<boolean>(false);
+  const [rotationInterval, setRotationIntervalState] = useState<number>(180);
 
   const setRotationInterval = (seconds: number) => {
     setRotationIntervalState(seconds);
-    try {
-      localStorage.setItem('odpe_wallpaper_interval', seconds.toString());
-    } catch {
-      // ignore
-    }
   };
 
   const [wallpaper, setWallpaper] = useState<WallpaperConfig>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY_WALLPAPER);
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed.dimOpacity === 'number') {
+          return {
+            imageUrl: HUACACHINA_WALLPAPER.imageUrl,
+            isCustom: false,
+            dimOpacity: parsed.dimOpacity ?? 15,
+            blurAmount: parsed.blurAmount ?? 0,
+          };
+        }
+      }
     } catch {
       // ignore
     }
     return {
-      imageUrl: HD_WALLPAPERS[0].imageUrl,
+      imageUrl: HUACACHINA_WALLPAPER.imageUrl,
       isCustom: false,
-      dimOpacity: 20, // Clean, vivid background
+      dimOpacity: 15, // Crisp, vibrant background
       blurAmount: 0,
     };
   });
 
+  // Keep localStorage in sync with wallpaper settings
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY_WALLPAPER, JSON.stringify(wallpaper));
+    } catch {
+      // ignore
+    }
+  }, [wallpaper]);
+
   // Current wallpaper metadata item
   const currentWallpaperItem = useMemo(() => {
-    return HD_WALLPAPERS[wallpaperIndex] || HD_WALLPAPERS[0];
+    return HD_WALLPAPERS[wallpaperIndex] || HUACACHINA_WALLPAPER;
   }, [wallpaperIndex]);
 
   // Select wallpaper by index
   const selectWallpaperByIndex = (index: number) => {
-    const validIndex = (index + HD_WALLPAPERS.length) % HD_WALLPAPERS.length;
+    const validIndex = 0;
     setWallpaperIndex(validIndex);
     setWallpaper(current => ({
       ...current,
-      imageUrl: HD_WALLPAPERS[validIndex].imageUrl,
+      imageUrl: HUACACHINA_WALLPAPER.imageUrl,
       isCustom: false,
     }));
   };
 
   const nextWallpaper = () => {
-    selectWallpaperByIndex(wallpaperIndex + 1);
+    selectWallpaperByIndex(0);
   };
 
   const prevWallpaper = () => {
-    selectWallpaperByIndex(wallpaperIndex - 1);
+    selectWallpaperByIndex(0);
   };
-
-  // Auto rotation effect every 10 seconds (or configured interval)
-  useEffect(() => {
-    if (!autoRotateWallpapers || wallpaper.isCustom) return;
-
-    const timer = setInterval(() => {
-      setWallpaperIndex(prevIndex => {
-        const nextIndex = (prevIndex + 1) % HD_WALLPAPERS.length;
-        setWallpaper(current => {
-          if (current.isCustom) return current;
-          return {
-            ...current,
-            imageUrl: HD_WALLPAPERS[nextIndex].imageUrl,
-          };
-        });
-        return nextIndex;
-      });
-    }, rotationInterval * 1000);
-
-    return () => clearInterval(timer);
-  }, [autoRotateWallpapers, rotationInterval, wallpaper.isCustom]);
 
   // 5. Immersive mode state to appreciate the wallpaper freely
   const [immersiveMode, setImmersiveMode] = useState<boolean>(false);

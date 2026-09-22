@@ -234,11 +234,12 @@ const MainContent: React.FC = () => {
         darkMode ? 'dark text-slate-100' : 'text-slate-900'
       }`}
     >
-      {/* FULL HD WALLPAPER LAYER WITH DISSOLVE TRANSITIONS */}
+      {/* FULL HD OFFICIAL WALLPAPER LAYER - OPTIMIZED 100% FOR PC AND MOBILE */}
       <div
-        className="fixed inset-0 pointer-events-none z-0 overflow-hidden"
+        className="fixed inset-0 pointer-events-none z-0 overflow-hidden bg-slate-950"
         style={{
           transform: 'translateZ(0)',
+          WebkitTransform: 'translateZ(0)',
           willChange: 'transform',
         }}
       >
@@ -255,20 +256,29 @@ const MainContent: React.FC = () => {
           />
         )}
 
-        {/* Current incoming wallpaper with cinematic fade */}
-        <img
-          key={displayWallpaper}
-          src={displayWallpaper}
-          alt={currentWallpaperItem?.title || 'Fondo Full HD Ica'}
-          className={`absolute inset-0 w-full h-full object-cover object-center ${
-            prevWallpaperUrl ? 'animate-wallpaper-fade' : ''
-          }`}
-          style={{
-            filter: wallpaper.blurAmount > 0 ? `blur(${wallpaper.blurAmount}px)` : 'none',
-            transform: 'scale(1.01)',
-          }}
-          loading="eager"
-        />
+        {/* Current incoming wallpaper with responsive picture (PC wide panoramic & mobile vertical) */}
+        <picture className="absolute inset-0 w-full h-full pointer-events-none">
+          {currentWallpaperItem?.wideImageUrl && (
+            <source
+              media="(min-width: 768px)"
+              srcSet={currentWallpaperItem.wideImageUrl}
+            />
+          )}
+          <img
+            key={displayWallpaper}
+            src={displayWallpaper}
+            alt={currentWallpaperItem?.title || 'Fondo Laguna de Huacachina bajo la Vía Láctea'}
+            className={`absolute inset-0 w-full h-full object-cover object-center ${
+              prevWallpaperUrl ? 'animate-wallpaper-fade' : ''
+            }`}
+            style={{
+              filter: wallpaper.blurAmount > 0 ? `blur(${wallpaper.blurAmount}px)` : 'none',
+              transform: 'scale(1.01)',
+            }}
+            loading="eager"
+            fetchPriority="high"
+          />
+        </picture>
 
         {/* Dynamic Translucent contrast overlay */}
         <div
@@ -276,7 +286,7 @@ const MainContent: React.FC = () => {
           style={{
             backgroundColor: immersiveMode
               ? 'transparent'
-              : 'rgba(0, 0, 0, 0.08)',
+              : `rgba(0, 0, 0, ${wallpaper.dimOpacity / 100})`,
           }}
         />
       </div>
@@ -362,8 +372,8 @@ const MainContent: React.FC = () => {
               {/* If viewMode is 'distritos', show the 31 Districts Grid */}
               {viewMode === 'distritos' && <DistritosGrid />}
 
-              {/* If viewMode is 'coordinadores', 'miembros' or 'asignados', show directory listing */}
-              {(viewMode === 'coordinadores' || viewMode === 'miembros' || viewMode === 'asignados') && <GestoresView />}
+              {/* If viewMode is 'coordinadores' or 'asignados', show directory listing */}
+              {(viewMode === 'coordinadores' || viewMode === 'asignados') && <GestoresView />}
 
               {/* If viewMode is 'todas', show focused mesas or 31 districts if none selected */}
               {viewMode === 'todas' && (

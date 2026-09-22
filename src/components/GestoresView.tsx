@@ -219,13 +219,7 @@ export const GestoresView: React.FC = () => {
             {viewMode === 'coordinadores' && (
               <>
                 <PhoneCall className="w-3.5 h-3.5" />
-                <span>Personal Electoral ({filterDistrito ? filterDistrito : '31 Distritos'})</span>
-              </>
-            )}
-            {viewMode === 'miembros' && (
-              <>
-                <Users className="w-3.5 h-3.5" />
-                Miembros de Mesa ({miembros.length})
+                <span>Responsables Electorales ({filterDistrito ? filterDistrito : '31 Distritos'})</span>
               </>
             )}
             {viewMode === 'asignados' && (
@@ -713,65 +707,6 @@ export const GestoresView: React.FC = () => {
               );
             })}
           </div>
-        </div>
-      )}
-
-      {/* ============================================================== */}
-      {/* VIEW: MIEMBROS DE MESA                                         */}
-      {/* ============================================================== */}
-      {viewMode === 'miembros' && (
-        <div className="space-y-1.5">
-          {miembros.map(({ contacto, mesaNumero, distrito, local }, idx) => (
-            <div
-              key={`${contacto.id}-${idx}`}
-              className="p-2.5 rounded-2xl border border-white/20 hover:border-cyan-300/80 bg-white/10 hover:bg-white/15 text-white backdrop-blur-md shadow-xs transition-all"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-1.5 mb-0.5">
-                    <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-black/40 text-cyan-200 border border-cyan-400/40">
-                      Mesa {mesaNumero}
-                    </span>
-                    <span className="text-[10px] font-bold text-amber-200 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
-                      {contacto.cargo}
-                    </span>
-                  </div>
-
-                  <h3 className="font-bold text-xs truncate text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
-                    {contacto.nombre}
-                  </h3>
-
-                  <p className="font-mono text-xs font-semibold text-cyan-300 drop-shadow-xs">
-                    {contacto.telefono}
-                  </p>
-
-                  <p className="text-[10px] text-white/80 truncate">
-                    {local} • {distrito}
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => callContact(contacto.telefono, contacto.nombre, contacto.cargo, `Mesa ${mesaNumero}`)}
-                    className="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-white font-bold text-xs flex items-center gap-1 active:scale-95 shadow-sm"
-                  >
-                    <Phone className="w-3 h-3 fill-current" />
-                    <span>Llamar</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => sendWhatsApp(contacto.telefono, contacto.nombre, contacto.cargo, `Mesa ${mesaNumero}`)}
-                    className="p-1.5 rounded-xl bg-emerald-600/30 hover:bg-emerald-600/40 border border-emerald-400/30 active:scale-95 flex items-center justify-center transition-all shadow-xs"
-                    title={`WhatsApp a ${contacto.nombre}`}
-                  >
-                    <WhatsAppAppIcon size={18} />
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
         </div>
       )}
 
