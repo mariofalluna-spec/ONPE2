@@ -1,7 +1,6 @@
 import React from 'react';
 import { ElectoralProvider, useElectoral } from './context/ElectoralContext';
 import { Header } from './components/Header';
-import { BingSearchBar } from './components/BingSearchBar';
 import { QuickActions } from './components/QuickActions';
 import { VotingTableCard } from './components/VotingTableCard';
 import { GestoresView } from './components/GestoresView';
@@ -354,9 +353,6 @@ const MainContent: React.FC = () => {
 
         {/* Bing Header */}
         <Header />
-
-        {/* Bing Pill Search Bar with Voice Search */}
-        <BingSearchBar />
 
         {/* Bing Quick Action Navigation Tiles */}
         <QuickActions />

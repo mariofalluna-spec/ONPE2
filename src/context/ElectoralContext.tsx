@@ -64,7 +64,7 @@ interface ElectoralContextType {
 
 const ElectoralContext = createContext<ElectoralContextType | undefined>(undefined);
 
-const STORAGE_KEY_MESAS = 'electoral_bing_directorio_mesas_v6';
+const STORAGE_KEY_MESAS = 'electoral_bing_directorio_mesas_v11';
 const STORAGE_KEY_DARK_MODE = 'electoral_bing_dark_mode';
 const STORAGE_KEY_WALLPAPER = 'electoral_bing_wallpaper_v1';
 
@@ -358,7 +358,21 @@ export const ElectoralProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     // playAppleWhatsApp(); // Audio disabled
     const cleanPhone = phone.replace(/[^0-9]/g, '');
     const mesaText = mesaOdistrito ? mesaOdistrito.replace('Mesa ', '') : 'XX';
-    const text = encodeURIComponent(`Hola ${nombre}, me comunico debido que estas encargado de la mesa n° ${mesaText} y queria comunicarme contigo.`);
+    const isCM = cargo?.toUpperCase().includes('CM') || cargo?.toUpperCase().includes('COORDINADOR DE MESA');
+    const isRLV = cargo?.toUpperCase().includes('RLV') || cargo?.toUpperCase().includes('RESPONSABLE');
+    const isCLV = cargo?.toUpperCase().includes('CLV') || cargo?.toUpperCase().includes('LOCAL');
+    const isCoordDist = cargo?.toUpperCase().includes('DISTRITAL');
+    let message = `Hola ${nombre}, me comunico debido que estas encargado de la mesa n° ${mesaText} y queria comunicarme contigo.`;
+    if (isCM) {
+      message = `Hola ${nombre}, me comunico con usted como Coordinador de Mesa (CM) del distrito de ${mesaOdistrito || ''}.`;
+    } else if (isRLV) {
+      message = `Hola ${nombre}, me comunico con usted como Responsable de Local de Votación (RLV) del distrito de ${mesaOdistrito || ''}.`;
+    } else if (isCLV) {
+      message = `Hola ${nombre}, me comunico con usted como Coordinador de Local de Votación (CLV) del distrito de ${mesaOdistrito || ''}.`;
+    } else if (isCoordDist) {
+      message = `Hola ${nombre}, me comunico con usted como Coordinador Distrital de ${mesaOdistrito || ''}.`;
+    }
+    const text = encodeURIComponent(message);
     window.open(`https://wa.me/${cleanPhone}?text=${text}`, '_blank');
   };
 

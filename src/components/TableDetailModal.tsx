@@ -3,6 +3,9 @@ import { X, Phone, MapPin, Building, ShieldCheck, UserPlus, Users, Plus, Shield,
 import { useElectoral } from '../context/ElectoralContext';
 import { ContactoElectoral } from '../types';
 import { WhatsAppAppIcon } from './WhatsAppAppIcon';
+import { getCLVsByDistrito } from '../data/clvData';
+import { getRLVsByDistrito } from '../data/rlvData';
+import { getCMsByDistrito } from '../data/cmData';
 
 export const TableDetailModal: React.FC = () => {
   const {
@@ -178,6 +181,200 @@ export const TableDetailModal: React.FC = () => {
             </button>
           </div>
         </div>
+
+        {/* 1.5 COORDINADORES DE LOCAL (CLV) DEL DISTRITO */}
+        {(() => {
+          const districtCLVs = getCLVsByDistrito(selectedMesa.distrito);
+          if (districtCLVs.length === 0) return null;
+          return (
+            <div className="p-3.5 rounded-2xl bg-emerald-950/25 backdrop-blur-md border border-emerald-500/30 mb-4 shadow-sm text-white">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-1.5 text-xs text-emerald-300 font-bold drop-shadow-sm">
+                  <Shield className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>COORDINADORES DE LOCAL (CLV)</span>
+                </div>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                  {districtCLVs.length} {districtCLVs.length === 1 ? 'asignado' : 'asignados'}
+                </span>
+              </div>
+
+              <div className="space-y-1.5">
+                {districtCLVs.map((clv, clvIdx) => (
+                  <div
+                    key={clv.id}
+                    className="p-2 rounded-xl bg-white/5 border border-emerald-500/20 flex items-center justify-between gap-2"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-4 h-4 rounded-full bg-emerald-500/25 text-emerald-300 text-[9px] font-black flex items-center justify-center shrink-0">
+                          {clvIdx + 1}
+                        </span>
+                        <span className="px-1 py-0.2 rounded text-[8px] font-bold bg-emerald-500/30 text-emerald-200 border border-emerald-400/30">
+                          CLV
+                        </span>
+                        <span className="text-xs font-bold uppercase tracking-wide text-white truncate drop-shadow-sm">
+                          {clv.nombreCompleto}
+                        </span>
+                      </div>
+                      <p className="font-mono text-xs font-bold text-cyan-300 pl-5 mt-0.5">
+                        {clv.telefonoRaw || clv.telefono}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => callContact(clv.telefono, clv.nombreCompleto, 'CLV', selectedMesa.distrito)}
+                        className="p-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-white active:scale-95 shadow-xs"
+                        title={`Llamar a ${clv.nombreCompleto}`}
+                      >
+                        <Phone className="w-3.5 h-3.5 fill-current" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => sendWhatsApp(clv.telefono, clv.nombreCompleto, 'CLV', selectedMesa.distrito)}
+                        className="p-2 rounded-lg bg-emerald-600/30 hover:bg-emerald-600/40 border border-emerald-400/30 text-emerald-300 active:scale-95 shadow-xs flex items-center justify-center"
+                        title={`WhatsApp a ${clv.nombreCompleto}`}
+                      >
+                        <WhatsAppAppIcon size={16} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* 1.3 COORDINADORES RLV DEL DISTRITO */}
+        {(() => {
+          const districtRLVs = getRLVsByDistrito(selectedMesa.distrito);
+          if (!districtRLVs || districtRLVs.length === 0) return null;
+
+          return (
+            <div className="mb-4">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-300 flex items-center gap-1.5 drop-shadow-sm">
+                  <Shield className="w-4 h-4 text-indigo-400" />
+                  Responsables de Local (RLV) del Distrito ({districtRLVs.length})
+                </h4>
+                <span className="text-[10px] opacity-80 text-white/80">
+                  {selectedMesa.distrito}
+                </span>
+              </div>
+
+              <div className="space-y-1.5">
+                {districtRLVs.map((rlv, rlvIdx) => (
+                  <div
+                    key={rlv.id}
+                    className="p-2 rounded-xl bg-white/5 border border-indigo-500/20 flex items-center justify-between gap-2"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-4 h-4 rounded-full bg-indigo-500/25 text-indigo-300 text-[9px] font-black flex items-center justify-center shrink-0">
+                          {rlvIdx + 1}
+                        </span>
+                        <span className="px-1 py-0.2 rounded text-[8px] font-bold bg-indigo-500/30 text-indigo-200 border border-indigo-400/30">
+                          RLV
+                        </span>
+                        <span className="text-xs font-bold uppercase tracking-wide text-white truncate drop-shadow-sm">
+                          {rlv.nombreCompleto}
+                        </span>
+                      </div>
+                      <p className="font-mono text-xs font-bold text-indigo-300 pl-5 mt-0.5">
+                        {rlv.telefonoRaw || rlv.telefono}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => callContact(rlv.telefono, rlv.nombreCompleto, 'RLV', selectedMesa.distrito)}
+                        className="p-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white active:scale-95 shadow-xs"
+                        title={`Llamar a ${rlv.nombreCompleto}`}
+                      >
+                        <Phone className="w-3.5 h-3.5 fill-current" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => sendWhatsApp(rlv.telefono, rlv.nombreCompleto, 'RLV', selectedMesa.distrito)}
+                        className="p-2 rounded-lg bg-emerald-600/30 hover:bg-emerald-600/40 border border-emerald-400/30 text-emerald-300 active:scale-95 shadow-xs flex items-center justify-center"
+                        title={`WhatsApp a ${rlv.nombreCompleto}`}
+                      >
+                        <WhatsAppAppIcon size={16} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* 1.4 COORDINADORES DE MESA (CM) DEL DISTRITO */}
+        {(() => {
+          const districtCMs = getCMsByDistrito(selectedMesa.distrito);
+          if (!districtCMs || districtCMs.length === 0) return null;
+
+          return (
+            <div className="mb-4">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-amber-300 flex items-center gap-1.5 drop-shadow-sm">
+                  <Check className="w-4 h-4 text-amber-400" />
+                  Coordinadores de Mesa (CM) del Distrito ({districtCMs.length})
+                </h4>
+                <span className="text-[10px] opacity-80 text-white/80">
+                  {selectedMesa.distrito}
+                </span>
+              </div>
+
+              <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
+                {districtCMs.map((cm, cmIdx) => (
+                  <div
+                    key={cm.id}
+                    className="p-2 rounded-xl bg-white/5 border border-amber-500/20 flex items-center justify-between gap-2"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-4 h-4 rounded-full bg-amber-500/25 text-amber-300 text-[9px] font-black flex items-center justify-center shrink-0">
+                          {cmIdx + 1}
+                        </span>
+                        <span className="px-1 py-0.2 rounded text-[8px] font-bold bg-amber-500/30 text-amber-200 border border-amber-400/30">
+                          CM
+                        </span>
+                        <span className="text-xs font-bold uppercase tracking-wide text-white truncate drop-shadow-sm">
+                          {cm.nombreCompleto}
+                        </span>
+                      </div>
+                      <p className="font-mono text-xs font-bold text-amber-300 pl-5 mt-0.5">
+                        {cm.telefonoRaw || cm.telefono}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => callContact(cm.telefono, cm.nombreCompleto, 'CM', selectedMesa.distrito)}
+                        className="p-2 rounded-lg bg-amber-600 hover:bg-amber-500 text-white active:scale-95 shadow-xs"
+                        title={`Llamar a ${cm.nombreCompleto}`}
+                      >
+                        <Phone className="w-3.5 h-3.5 fill-current" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => sendWhatsApp(cm.telefono, cm.nombreCompleto, 'CM', selectedMesa.distrito)}
+                        className="p-2 rounded-lg bg-emerald-600/30 hover:bg-emerald-600/40 border border-emerald-400/30 text-emerald-300 active:scale-95 shadow-xs flex items-center justify-center"
+                        title={`WhatsApp a ${cm.nombreCompleto}`}
+                      >
+                        <WhatsAppAppIcon size={16} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
 
         {/* 2. MIEMBROS DE MESA LIST */}
         <div className="mb-4">

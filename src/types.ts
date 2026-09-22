@@ -25,6 +25,42 @@ export interface ContactoElectoral {
   disponible?: boolean;
 }
 
+export interface CLVInfo {
+  id: string;
+  apellidoPaterno: string;
+  nombres: string;
+  nombreCompleto: string; // UN SOLO NOMBRE + APELLIDO (e.g. "ALEX ALFARO")
+  telefono: string; // "+51991059634"
+  telefonoRaw: string; // "991059634"
+  cargo: 'CLV';
+  distrito: string; // e.g. "Ica 1"
+  provincia: string; // "Ica" | "Nasca" | "Palpa"
+}
+
+export interface RLVInfo {
+  id: string;
+  apellidoPaterno: string;
+  nombres: string;
+  nombreCompleto: string; // UN SOLO NOMBRE + APELLIDO (e.g. "LIKEY ALVARADO")
+  telefono: string; // "+51914825947"
+  telefonoRaw: string; // "914825947"
+  cargo: 'RLV';
+  distrito: string; // e.g. "La Tinguiña 1"
+  provincia: string; // "Ica" | "Nasca" | "Palpa"
+}
+
+export interface CMInfo {
+  id: string;
+  apellidoPaterno: string;
+  nombres: string;
+  nombreCompleto: string; // UN SOLO NOMBRE + APELLIDO (e.g. "INDIRA ABARCA")
+  telefono: string; // "+51971277262"
+  telefonoRaw: string; // "971277262"
+  cargo: 'CM';
+  distrito: string; // e.g. "Vista Alegre"
+  provincia: string; // "Ica" | "Nasca" | "Palpa"
+}
+
 export interface MesaElectoral {
   id: string;
   numeroMesa: string; // e.g. "048201"

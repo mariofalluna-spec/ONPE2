@@ -15,7 +15,7 @@ export const QuickActions: React.FC = () => {
   const NAV_ITEMS: { id: ViewMode; label: string; icon: React.FC<{ className?: string }>; badge?: string | number }[] = [
     { id: 'distritos', label: '31 Dist.', icon: LayoutGrid, badge: '31' },
     { id: 'todas', label: 'Mesas', icon: Building2 },
-    { id: 'coordinadores', label: 'Coord.', icon: PhoneCall },
+    { id: 'coordinadores', label: 'Coord.', icon: PhoneCall, badge: '661' },
     { id: 'miembros', label: 'Miembros', icon: Users },
     { id: 'asignados', label: 'Asignados', icon: Shield, badge: totalAsignados > 0 ? totalAsignados : undefined },
   ];
