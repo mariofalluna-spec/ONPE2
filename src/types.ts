@@ -35,6 +35,7 @@ export interface CLVInfo {
   cargo: 'CLV';
   distrito: string; // e.g. "Ica 1"
   provincia: string; // "Ica" | "Nasca" | "Palpa"
+  localVotacion?: string; // e.g. "AEP JUAN VALER SANDOVAL"
 }
 
 export interface RLVInfo {
@@ -47,6 +48,7 @@ export interface RLVInfo {
   cargo: 'RLV';
   distrito: string; // e.g. "La Tinguiña 1"
   provincia: string; // "Ica" | "Nasca" | "Palpa"
+  localVotacion?: string; // e.g. "IE 137"
 }
 
 export interface CMInfo {
@@ -59,6 +61,7 @@ export interface CMInfo {
   cargo: 'CM';
   distrito: string; // e.g. "Vista Alegre"
   provincia: string; // "Ica" | "Nasca" | "Palpa"
+  localVotacion?: string;
 }
 
 export interface MesaElectoral {

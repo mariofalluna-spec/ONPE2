@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Phone, Wifi, WifiOff, Search, X, Users, Shield, PhoneCall, LayoutGrid, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Phone, Wifi, WifiOff, Search, X, Users, Shield, PhoneCall, LayoutGrid, ChevronLeft, ChevronRight, UserCheck } from 'lucide-react';
 import { useElectoral } from '../context/ElectoralContext';
 import { LISTA_31_DISTRITOS, DistritoInfo } from '../data/mockElectoralData';
 import { WhatsAppAppIcon } from './WhatsAppAppIcon';
@@ -7,7 +7,7 @@ import { getCLVsByDistrito, LISTA_CLV } from '../data/clvData';
 import { getRLVsByDistrito, LISTA_RLV } from '../data/rlvData';
 import { getCMsByDistrito, LISTA_CM } from '../data/cmData';
 
-type RoleFilter = 'TODOS' | 'Coordinadores' | 'RLV' | 'CM';
+type RoleFilter = 'TODOS' | 'CD' | 'CLV' | 'RLV' | 'CM';
 type ProvinciaFilter = 'TODOS' | 'Ica' | 'Nasca' | 'Palpa';
 
 interface PersonaSuggestion {
@@ -39,6 +39,7 @@ export const DistritosGrid: React.FC = () => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
   const searchContainerRef = useRef<HTMLDivElement>(null);
+  const [activeClvIndices, setActiveClvIndices] = useState<Record<number, number>>({});
   const [activeRlvIndices, setActiveRlvIndices] = useState<Record<number, number>>({});
   const [activeCmIndices, setActiveCmIndices] = useState<Record<number, number>>({});
 
@@ -165,13 +166,13 @@ export const DistritosGrid: React.FC = () => {
     if (!q || q.length < 2) return [];
 
     let pool = allPersonas;
-    if (roleFilter === 'Coordinadores') {
-      pool = allPersonas.filter((p) => p.cargo === 'COORD' || p.cargo === 'CLV');
+    if (roleFilter === 'CD') {
+      pool = allPersonas.filter((p) => p.cargo === 'COORD');
+    } else if (roleFilter === 'CLV') {
+      pool = allPersonas.filter((p) => p.cargo === 'CLV' || p.cargo === 'COORD');
     } else if (roleFilter === 'RLV') {
-      // In RLV mode, permit searching RLV and also Coordinador Distrital as requested
       pool = allPersonas.filter((p) => p.cargo === 'RLV' || p.cargo === 'COORD');
     } else if (roleFilter === 'CM') {
-      // In CM mode, permit searching CM and also Coordinador Distrital as requested
       pool = allPersonas.filter((p) => p.cargo === 'CM' || p.cargo === 'COORD');
     }
 
@@ -208,8 +209,10 @@ export const DistritosGrid: React.FC = () => {
     setSelectedSuggestionIndex(-1);
 
     // Switch role filter to match the selected persona
-    if (persona.cargo === 'COORD' || persona.cargo === 'CLV') {
-      setRoleFilter('Coordinadores');
+    if (persona.cargo === 'COORD') {
+      setRoleFilter('CD');
+    } else if (persona.cargo === 'CLV') {
+      setRoleFilter('CLV');
     } else if (persona.cargo === 'RLV') {
       setRoleFilter('RLV');
     } else if (persona.cargo === 'CM') {
@@ -221,10 +224,16 @@ export const DistritosGrid: React.FC = () => {
       setSelectedProvincia('TODOS');
     }
 
-    // If it's an RLV or CM, sync active stepper index
+    // If it's a CLV, RLV or CM, sync active stepper index
     const distMatch = LISTA_31_DISTRITOS.find((d) => d.nombre === persona.distrito);
     if (distMatch) {
-      if (persona.cargo === 'RLV') {
+      if (persona.cargo === 'CLV') {
+        const clvs = getCLVsByDistrito(persona.distrito);
+        const idx = clvs.findIndex((c) => c.nombreCompleto === persona.nombre || c.id === persona.id);
+        if (idx !== -1) {
+          setActiveClvIndices((prev) => ({ ...prev, [distMatch.id]: idx }));
+        }
+      } else if (persona.cargo === 'RLV') {
         const rlvs = getRLVsByDistrito(persona.distrito);
         const idx = rlvs.findIndex((r) => r.nombreCompleto === persona.nombre || r.id === persona.id);
         if (idx !== -1) {
@@ -267,6 +276,22 @@ export const DistritosGrid: React.FC = () => {
     }
   };
 
+  const handlePrevClv = (e: React.MouseEvent, distId: number, maxCount: number) => {
+    e.stopPropagation();
+    setActiveClvIndices((prev) => ({
+      ...prev,
+      [distId]: ((prev[distId] || 0) - 1 + maxCount) % maxCount,
+    }));
+  };
+
+  const handleNextClv = (e: React.MouseEvent, distId: number, maxCount: number) => {
+    e.stopPropagation();
+    setActiveClvIndices((prev) => ({
+      ...prev,
+      [distId]: ((prev[distId] || 0) + 1) % maxCount,
+    }));
+  };
+
   const handlePrevRlv = (e: React.MouseEvent, distId: number, maxCount: number) => {
     e.stopPropagation();
     setActiveRlvIndices((prev) => ({
@@ -301,12 +326,14 @@ export const DistritosGrid: React.FC = () => {
 
   const getSearchPlaceholder = (role: RoleFilter) => {
     switch (role) {
-      case 'Coordinadores':
-        return 'Buscar Coordinador Distrital o CLV (ej: Carlos, Elmer, 956...)...';
+      case 'CD':
+        return 'Buscar Coordinador Distrital (ej: Elmer Rojas, Carlos, 953...)...';
+      case 'CLV':
+        return 'Buscar CLV o local asignado (ej: Alex Alfaro, San Miguel...)...';
       case 'RLV':
-        return 'Buscar RLV o Coordinador Distrital (ej: Carlos, Nadia...)...';
+        return 'Buscar RLV o local asignado (ej: Daniel Echegaray, 22487...)...';
       case 'CM':
-        return 'Buscar CM o Coordinador Distrital (ej: Carlos, Indira...)...';
+        return 'Buscar CM o coordinador (ej: Nayeli Flores, Carlos...)...';
       default:
         return 'Buscar persona o distrito (ej: Carlos Carrera, Elmer Rojas, Los Aquijes)...';
     }
@@ -334,17 +361,19 @@ export const DistritosGrid: React.FC = () => {
       const coordMatches = coordName.includes(query) || rawCoordName.includes(query) || coordTel.includes(query);
 
       const clvs = getCLVsByDistrito(dist.nombre);
-      const clvMatches = clvs.some(c => c.nombreCompleto.toLowerCase().includes(query) || c.telefono.includes(query));
+      const clvMatches = clvs.some(c => c.nombreCompleto.toLowerCase().includes(query) || c.telefono.includes(query) || (c.localVotacion && c.localVotacion.toLowerCase().includes(query)));
 
       const rlvs = getRLVsByDistrito(dist.nombre);
-      const rlvMatches = rlvs.some(r => r.nombreCompleto.toLowerCase().includes(query) || r.telefono.includes(query));
+      const rlvMatches = rlvs.some(r => r.nombreCompleto.toLowerCase().includes(query) || r.telefono.includes(query) || (r.localVotacion && r.localVotacion.toLowerCase().includes(query)));
 
       const cms = getCMsByDistrito(dist.nombre);
       const cmMatches = cms.some(c => c.nombreCompleto.toLowerCase().includes(query) || c.telefono.includes(query));
 
-      // As requested: allow searching the Coordinador Distrital also in RLV and CM modes!
-      if (roleFilter === 'Coordinadores') {
-        return distNameMatches || coordMatches || clvMatches;
+      if (roleFilter === 'CD') {
+        return distNameMatches || coordMatches;
+      }
+      if (roleFilter === 'CLV') {
+        return distNameMatches || clvMatches || coordMatches;
       }
       if (roleFilter === 'RLV') {
         return distNameMatches || rlvMatches || coordMatches;
@@ -409,13 +438,13 @@ export const DistritosGrid: React.FC = () => {
       >
         {/* Row 1: Role Segments + Province Quick Filter Chips */}
         <div className="flex items-center justify-between gap-1 flex-wrap">
-          {/* Role Segment Pills: 'Todos', 'Coordinadores', 'RLV', 'CM' */}
+          {/* Role Segment Pills: 'Todos', 'CD', 'CLV', 'RLV', 'CM' */}
           <div className="flex items-center gap-1 flex-wrap">
             <button
               type="button"
               id="filter-segment-todos"
               onClick={() => setRoleFilter('TODOS')}
-              className={`px-2.5 py-1 rounded-lg text-[10px] font-black transition-all flex items-center gap-1 ${
+              className={`px-2 py-1 rounded-lg text-[10px] font-black transition-all flex items-center gap-1 ${
                 roleFilter === 'TODOS'
                   ? 'bg-white/30 text-white border border-white/50 shadow-xs'
                   : 'bg-white/5 text-white/70 hover:bg-white/15 hover:text-white'
@@ -428,46 +457,65 @@ export const DistritosGrid: React.FC = () => {
             <button
               type="button"
               id="filter-segment-coordinadores"
-              onClick={() => setRoleFilter('Coordinadores')}
-              className={`px-2.5 py-1 rounded-lg text-[10px] font-black transition-all flex items-center gap-1 ${
-                roleFilter === 'Coordinadores'
+              onClick={() => setRoleFilter('CD')}
+              className={`px-2 py-1 rounded-lg text-[10px] font-black transition-all flex items-center gap-1 ${
+                roleFilter === 'CD'
                   ? 'bg-cyan-500 text-slate-950 shadow-xs ring-1 ring-cyan-300'
                   : 'bg-cyan-950/40 text-cyan-300 border border-cyan-500/30 hover:bg-cyan-900/40'
               }`}
+              title="31 Coordinadores Distritales"
             >
               <PhoneCall className="w-3 h-3" />
-              <span>Coordinadores</span>
-              <span className="text-[8.5px] px-1 py-0.2 rounded bg-black/30 opacity-90">31 + 54 CLV</span>
+              <span>CD</span>
+              <span className="text-[8.5px] px-1 py-0.2 rounded bg-black/30 opacity-90">31</span>
+            </button>
+
+            <button
+              type="button"
+              id="filter-segment-clv"
+              onClick={() => setRoleFilter('CLV')}
+              className={`px-2 py-1 rounded-lg text-[10px] font-black transition-all flex items-center gap-1 ${
+                roleFilter === 'CLV'
+                  ? 'bg-emerald-500 text-slate-950 shadow-xs ring-1 ring-emerald-300'
+                  : 'bg-emerald-950/40 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-900/40'
+              }`}
+              title={`${LISTA_CLV.length} Coordinadores de Local de Votación (CLV)`}
+            >
+              <UserCheck className="w-3 h-3" />
+              <span>CLV</span>
+              <span className="text-[8.5px] px-1 py-0.2 rounded bg-black/30 opacity-90">{LISTA_CLV.length}</span>
             </button>
 
             <button
               type="button"
               id="filter-segment-rlv"
               onClick={() => setRoleFilter('RLV')}
-              className={`px-2.5 py-1 rounded-lg text-[10px] font-black transition-all flex items-center gap-1 ${
+              className={`px-2 py-1 rounded-lg text-[10px] font-black transition-all flex items-center gap-1 ${
                 roleFilter === 'RLV'
                   ? 'bg-indigo-500 text-white shadow-xs ring-1 ring-indigo-300'
                   : 'bg-indigo-950/40 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-900/40'
               }`}
+              title={`${LISTA_RLV.length} Responsables de Local de Votación (RLV)`}
             >
               <Shield className="w-3 h-3" />
               <span>RLV</span>
-              <span className="text-[8.5px] px-1 py-0.2 rounded bg-black/30 opacity-90">94</span>
+              <span className="text-[8.5px] px-1 py-0.2 rounded bg-black/30 opacity-90">{LISTA_RLV.length}</span>
             </button>
 
             <button
               type="button"
               id="filter-segment-cm"
               onClick={() => setRoleFilter('CM')}
-              className={`px-2.5 py-1 rounded-lg text-[10px] font-black transition-all flex items-center gap-1 ${
+              className={`px-2 py-1 rounded-lg text-[10px] font-black transition-all flex items-center gap-1 ${
                 roleFilter === 'CM'
                   ? 'bg-amber-500 text-slate-950 shadow-xs ring-1 ring-amber-300 font-black'
                   : 'bg-amber-950/40 text-amber-300 border border-amber-500/30 hover:bg-amber-900/40'
               }`}
+              title={`${LISTA_CM.length} Coordinadores de Mesa (CM)`}
             >
               <Users className="w-3 h-3" />
               <span>CM</span>
-              <span className="text-[8.5px] px-1 py-0.2 rounded bg-black/30 opacity-90">482</span>
+              <span className="text-[8.5px] px-1 py-0.2 rounded bg-black/30 opacity-90">{LISTA_CM.length}</span>
             </button>
           </div>
 
@@ -656,8 +704,13 @@ export const DistritosGrid: React.FC = () => {
           // Selection of active contact based on role filter and specific search
           const query = specificSearch.toLowerCase().trim();
 
+          // For CLV: find matching CLV or use stepper index
+          const searchClvIdx = query ? clvs.findIndex(c => c.nombreCompleto.toLowerCase().includes(query) || c.telefono.includes(query) || (c.localVotacion && c.localVotacion.toLowerCase().includes(query))) : -1;
+          const currentClvIdx = searchClvIdx !== -1 ? searchClvIdx : ((activeClvIndices[dist.id] || 0) % (clvs.length || 1));
+          const currentClv = clvs[currentClvIdx];
+
           // For RLV: find matching RLV or use stepper index
-          const searchRlvIdx = query ? rlvs.findIndex(r => r.nombreCompleto.toLowerCase().includes(query) || r.telefono.includes(query)) : -1;
+          const searchRlvIdx = query ? rlvs.findIndex(r => r.nombreCompleto.toLowerCase().includes(query) || r.telefono.includes(query) || (r.localVotacion && r.localVotacion.toLowerCase().includes(query))) : -1;
           const currentRlvIdx = searchRlvIdx !== -1 ? searchRlvIdx : ((activeRlvIndices[dist.id] || 0) % (rlvs.length || 1));
           const currentRlv = rlvs[currentRlvIdx];
 
@@ -671,7 +724,15 @@ export const DistritosGrid: React.FC = () => {
           let contactTelefono = dist.coordinadorTelefono;
           let contactRoleLabel = 'Coordinador Distrital';
 
-          if (roleFilter === 'RLV' && currentRlv) {
+          if (roleFilter === 'CD') {
+            contactNombre = encargadoNombre;
+            contactTelefono = dist.coordinadorTelefono;
+            contactRoleLabel = 'CD';
+          } else if (roleFilter === 'CLV' && currentClv) {
+            contactNombre = currentClv.nombreCompleto;
+            contactTelefono = currentClv.telefono;
+            contactRoleLabel = 'CLV';
+          } else if (roleFilter === 'RLV' && currentRlv) {
             contactNombre = currentRlv.nombreCompleto;
             contactTelefono = currentRlv.telefono;
             contactRoleLabel = 'RLV';
@@ -723,7 +784,15 @@ export const DistritosGrid: React.FC = () => {
                       {dist.provincia.slice(0, 3)}
                     </span>
                   )}
-                  {roleFilter === 'Coordinadores' && clvs.length > 0 && (
+                  {roleFilter === 'CD' && (
+                    <span
+                      title="Coordinador Distrital"
+                      className="text-[7.5px] font-black text-cyan-300 bg-cyan-950/60 px-1 py-0.2 rounded border border-cyan-500/40 shrink-0"
+                    >
+                      CD
+                    </span>
+                  )}
+                  {roleFilter === 'CLV' && (
                     <span
                       title={`${clvs.length} Coordinadores de Local (CLV)`}
                       className="text-[7.5px] font-black text-emerald-300 bg-emerald-950/60 px-1 py-0.2 rounded border border-emerald-500/40 shrink-0"
@@ -751,8 +820,8 @@ export const DistritosGrid: React.FC = () => {
 
                 {/* Bottom Row: Role Persona with Single Name + Uppercase Surname & Stepper if multiple */}
                 <div className="flex items-center gap-1 leading-none mt-0.5 min-w-0">
-                  {/* CASE 1: TODOS or COORDINADORES */}
-                  {(roleFilter === 'TODOS' || roleFilter === 'Coordinadores') && (
+                  {/* CASE 1: TODOS or CD */}
+                  {(roleFilter === 'TODOS' || roleFilter === 'CD') && (
                     <>
                       <span className="text-[8.5px] font-bold uppercase tracking-wider text-amber-200 truncate drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
                         {encargadoNombre}
@@ -768,7 +837,50 @@ export const DistritosGrid: React.FC = () => {
                     </>
                   )}
 
-                  {/* CASE 2: RLV SEGMENT */}
+                  {/* CASE 2: CLV SEGMENT */}
+                  {roleFilter === 'CLV' && (
+                    <div className="flex items-center gap-1 min-w-0 flex-1">
+                      {currentClv ? (
+                        <>
+                          <span className="text-[8.5px] font-bold uppercase tracking-wider text-emerald-200 truncate drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
+                            {currentClv.nombreCompleto}
+                          </span>
+                          {clvs.length > 1 && (
+                            <div
+                              onClick={(e) => e.stopPropagation()}
+                              className="flex items-center gap-0.5 shrink-0 bg-black/40 px-1 py-0 rounded border border-emerald-500/30 text-[7px] text-emerald-300"
+                            >
+                              <button
+                                type="button"
+                                title="CLV anterior"
+                                onClick={(e) => handlePrevClv(e, dist.id, clvs.length)}
+                                className="hover:text-white p-0.5"
+                              >
+                                <ChevronLeft className="w-2.5 h-2.5" />
+                              </button>
+                              <span className="font-mono font-bold">
+                                {currentClvIdx + 1}/{clvs.length}
+                              </span>
+                              <button
+                                type="button"
+                                title="Siguiente CLV"
+                                onClick={(e) => handleNextClv(e, dist.id, clvs.length)}
+                                className="hover:text-white p-0.5"
+                              >
+                                <ChevronRight className="w-2.5 h-2.5" />
+                              </button>
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <span className="text-[8px] text-white/50 italic">
+                          Sin CLV asignado
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {/* CASE 3: RLV SEGMENT */}
                   {roleFilter === 'RLV' && (
                     <div className="flex items-center gap-1 min-w-0 flex-1">
                       {currentRlv ? (
@@ -811,7 +923,7 @@ export const DistritosGrid: React.FC = () => {
                     </div>
                   )}
 
-                  {/* CASE 3: CM SEGMENT */}
+                  {/* CASE 4: CM SEGMENT */}
                   {roleFilter === 'CM' && (
                     <div className="flex items-center gap-1 min-w-0 flex-1">
                       {currentCm ? (
@@ -882,7 +994,9 @@ export const DistritosGrid: React.FC = () => {
                     callContact(contactTelefono, contactNombre, contactRoleLabel, dist.nombre);
                   }}
                   className={`w-[19px] h-[19px] rounded-[6px] flex items-center justify-center shadow-xs text-white hover:scale-115 active:scale-95 transition-transform shrink-0 ${
-                    roleFilter === 'RLV'
+                    roleFilter === 'CLV'
+                      ? 'bg-gradient-to-b from-emerald-400 to-teal-600 hover:from-emerald-300 hover:to-teal-500'
+                      : roleFilter === 'RLV'
                       ? 'bg-gradient-to-b from-indigo-400 to-purple-600 hover:from-indigo-300 hover:to-purple-500'
                       : roleFilter === 'CM'
                       ? 'bg-gradient-to-b from-amber-400 to-orange-600 hover:from-amber-300 hover:to-orange-500'

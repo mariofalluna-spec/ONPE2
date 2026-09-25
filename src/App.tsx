@@ -9,6 +9,7 @@ import { VoiceSearchModal } from './components/VoiceSearchModal';
 import { DatabaseModal } from './components/DatabaseModal';
 import { WallpaperSettingsModal } from './components/WallpaperSettingsModal';
 import { PWAInstallModal } from './components/PWAInstallModal';
+import { SupabaseBackupModal } from './components/SupabaseBackupModal';
 import { OdpeSunLogo } from './components/OdpeSunLogo';
 import { DistritosGrid } from './components/DistritosGrid';
 import { WhatsAppAppIcon } from './components/WhatsAppAppIcon';
@@ -40,9 +41,11 @@ const MainContent: React.FC = () => {
     currentWallpaperItem,
     showInstallModal,
     setShowInstallModal,
+    showSupabaseModal,
+    setShowSupabaseModal,
   } = useElectoral();
 
-  // 30-Second Inactivity Timer for Wallpaper Screensaver Mode
+  // 1-Minute Inactivity Timer for Wallpaper Screensaver Mode (despeja y muestra solo fondo tras 1 min)
   const timerRef = React.useRef<NodeJS.Timeout | null>(null);
   const wakeUpTimeRef = React.useRef<number>(0);
 
@@ -55,13 +58,15 @@ const MainContent: React.FC = () => {
 
     timerRef.current = setTimeout(() => {
       setImmersiveMode(true);
-    }, 30000); // 30 seconds of inactivity
+    }, 60000); // 1 minuto (60 segundos) de inactividad
   }, [isListening, setImmersiveMode]);
 
   // Clean wake-up function that blocks any accidental click-through to underlying cards or modals
-  const handleWakeUp = React.useCallback((e: React.SyntheticEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleWakeUp = React.useCallback((e?: React.SyntheticEvent | Event) => {
+    if (e) {
+      e.preventDefault?.();
+      e.stopPropagation?.();
+    }
     wakeUpTimeRef.current = Date.now();
     setImmersiveMode(false);
     resetIdleTimer();
@@ -118,6 +123,29 @@ const MainContent: React.FC = () => {
       });
     };
   }, [immersiveMode, resetIdleTimer]);
+
+  // While in screensaver mode (immersiveMode), wake up immediately on ANY user activity (movement, key, click, touch)
+  React.useEffect(() => {
+    if (!immersiveMode) return;
+
+    const wakeCooldown = Date.now();
+    const handleWakeActivity = (e: Event) => {
+      // Small debounce of 200ms to avoid immediate wake-up from the triggering event
+      if (Date.now() - wakeCooldown < 200) return;
+      handleWakeUp(e);
+    };
+
+    const wakeEvents = ['mousemove', 'mousedown', 'pointerdown', 'touchstart', 'keydown', 'wheel'];
+    wakeEvents.forEach((evt) => {
+      window.addEventListener(evt, handleWakeActivity, { passive: true });
+    });
+
+    return () => {
+      wakeEvents.forEach((evt) => {
+        window.removeEventListener(evt, handleWakeActivity);
+      });
+    };
+  }, [immersiveMode, handleWakeUp]);
 
   // Unique districts found in search results
   const distritosEncontrados = React.useMemo(() => {
@@ -291,51 +319,16 @@ const MainContent: React.FC = () => {
         />
       </div>
 
-      {/* FULL-SCREEN IDLE TOUCH CATCHER (Screen Saver / Wallpaper View) */}
+      {/* FULL-SCREEN IDLE TOUCH CATCHER (Screen Saver / Solo Fondo de Pantalla tras 1 min) */}
       {immersiveMode && (
         <div
           id="idle-wallpaper-touch-catcher"
           onPointerDown={handleWakeUp}
           onTouchStart={handleWakeUp}
           onClick={handleWakeUp}
-          className="fixed inset-0 z-50 cursor-pointer flex flex-col justify-between items-center pt-12 pb-8 px-4 select-none touch-none"
-        >
-          {/* Subtle iPhone Lockscreen Watermark with Animated Sun */}
-          <div className="flex flex-col items-center gap-2">
-            <OdpeSunLogo size={52} />
-            <div className="text-center">
-              <h2 className="text-xl font-extrabold text-white tracking-wider drop-shadow-md">
-                odpe <span className="font-black text-amber-300">ICA</span>
-              </h2>
-            </div>
-
-            {/* Active HD Wallpaper Landscape Badge */}
-            <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-black/45 backdrop-blur-md border border-white/20 text-white shadow-lg mt-1 text-xs">
-              <MapPin className="w-3.5 h-3.5 text-amber-300 shrink-0" />
-              <span className="font-bold tracking-tight">{currentWallpaperItem?.title || 'Ica'}</span>
-              <span className="opacity-80 text-[10px] hidden sm:inline">• {currentWallpaperItem?.location}</span>
-            </div>
-
-            {/* Auto-rotation indicator dots (Removed) */}
-            {/* <div className="flex items-center gap-1.5 mt-2">
-              {hdWallpapers.map((wp, idx) => (
-                <span
-                  key={wp.id}
-                  className={`h-1.5 rounded-full transition-all duration-500 ${
-                    idx === wallpaperIndex
-                      ? 'w-5 bg-amber-300 shadow-xs shadow-amber-300/80'
-                      : 'w-1.5 bg-white/30'
-                  }`}
-                />
-              ))}
-            </div> */}
-          </div>
-
-          <div className="px-4 py-2.5 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md text-white/95 border border-white/20 text-xs font-medium shadow-2xl flex items-center gap-2 animate-pulse active:scale-95 transition-all">
-            <Eye className="w-4 h-4 text-cyan-300" />
-            <span>Toca en cualquier lugar para volver al directorio</span>
-          </div>
-        </div>
+          className="fixed inset-0 z-50 cursor-pointer select-none touch-none bg-transparent"
+          title="Toca o mueve el cursor para volver al directorio"
+        />
       )}
 
       {/* APPLICATION SHELL - Responsive fluid container allowing all 31 districts to fit in a single screen */}
@@ -568,6 +561,7 @@ const MainContent: React.FC = () => {
         <TableDetailModal />
         <VoiceSearchModal />
         <DatabaseModal />
+        <SupabaseBackupModal isOpen={showSupabaseModal} onClose={() => setShowSupabaseModal(false)} />
         <WallpaperSettingsModal />
         <PWAInstallModal isOpen={showInstallModal} onClose={() => setShowInstallModal(false)} />
       </div>

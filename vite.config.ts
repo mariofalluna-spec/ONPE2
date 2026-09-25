@@ -11,7 +11,18 @@ export default defineConfig(() => {
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['favicon.png', 'apple-touch-icon.png', 'icon.svg'],
+        includeAssets: [
+          'favicon.png',
+          'apple-touch-icon.png',
+          'icon.svg',
+          'huacachina_dia.jpg',
+          'huacachina_dia_wide.jpg',
+          'huacachina_milky_way.jpg',
+          'huacachina_milky_way_wide.jpg',
+          'pwa-192x192.png',
+          'pwa-512x512.png',
+          'pwa-maskable-512x512.png'
+        ],
         manifest: {
           id: '/',
           name: 'ODPE ICA - Directorio',

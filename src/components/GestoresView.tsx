@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Phone, Building, Users, Shield, PhoneCall, Search, X, CheckCircle2, UserCheck, MapPin, ChevronLeft } from 'lucide-react';
+import { Phone, Building, Users, Shield, PhoneCall, Search, X, CheckCircle2, UserCheck, MapPin, ChevronLeft, Download } from 'lucide-react';
 import { useElectoral } from '../context/ElectoralContext';
 import { ContactoElectoral, CLVInfo, RLVInfo, CMInfo } from '../types';
 import { WhatsAppAppIcon } from './WhatsAppAppIcon';
@@ -7,6 +7,7 @@ import { LISTA_31_DISTRITOS, DistritoInfo } from '../data/mockElectoralData';
 import { LISTA_CLV, getCLVsByDistrito } from '../data/clvData';
 import { LISTA_RLV, getRLVsByDistrito } from '../data/rlvData';
 import { LISTA_CM, getCMsByDistrito } from '../data/cmData';
+import { exportarCoordinadoresMesaExcel } from '../utils/exportExcel';
 
 /**
  * Helper to ensure strictly: UN SOLO NOMBRE + APELLIDO (all uppercase)
@@ -38,6 +39,7 @@ export const GestoresView: React.FC = () => {
     setViewMode,
     filterDistrito,
     setFilterDistrito,
+    showToast,
   } = useElectoral();
 
   // Filters for Coordinadores & CLV view
@@ -287,19 +289,19 @@ export const GestoresView: React.FC = () => {
             </div>
             <div className="p-1 rounded-lg bg-emerald-500/10 border border-emerald-400/20">
               <div className="text-[9px] font-bold text-emerald-200 uppercase tracking-tight">CLV Asignados</div>
-              <div className="text-sm font-black text-emerald-300">54</div>
+              <div className="text-sm font-black text-emerald-300">{LISTA_CLV.length}</div>
             </div>
             <div className="p-1 rounded-lg bg-indigo-500/10 border border-indigo-400/20">
               <div className="text-[9px] font-bold text-indigo-200 uppercase tracking-tight">RLV Asignados</div>
-              <div className="text-sm font-black text-indigo-300">94</div>
+              <div className="text-sm font-black text-indigo-300">{LISTA_RLV.length}</div>
             </div>
             <div className="p-1 rounded-lg bg-amber-500/10 border border-amber-400/20">
               <div className="text-[9px] font-bold text-amber-200 uppercase tracking-tight">CM Asignados</div>
-              <div className="text-sm font-black text-amber-300">482</div>
+              <div className="text-sm font-black text-amber-300">{LISTA_CM.length}</div>
             </div>
             <div className="col-span-2 sm:col-span-1 p-1 rounded-lg bg-rose-500/10 border border-rose-400/20">
               <div className="text-[9px] font-bold text-rose-200 uppercase tracking-tight">Total Directorio</div>
-              <div className="text-sm font-black text-rose-300">661</div>
+              <div className="text-sm font-black text-rose-300">{31 + LISTA_CLV.length + LISTA_RLV.length + LISTA_CM.length}</div>
             </div>
           </div>
 
@@ -525,10 +527,19 @@ export const GestoresView: React.FC = () => {
                                     {clv.nombreCompleto}
                                   </span>
                                 </div>
-                                <div className="pl-5 mt-0.5">
-                                  <span className="font-mono text-[10px] font-semibold text-emerald-200">
+                                <div className="pl-5 mt-0.5 flex items-center gap-1.5 flex-wrap">
+                                  <span className="font-mono text-[10px] font-semibold text-emerald-200 shrink-0">
                                     {clv.telefonoRaw || clv.telefono}
                                   </span>
+                                  {clv.localVotacion && (
+                                    <span
+                                      className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[8.5px] font-medium text-emerald-100 bg-emerald-950/60 border border-emerald-400/35 max-w-full"
+                                      title={`Local de Votación asignado (I.E): ${clv.localVotacion}`}
+                                    >
+                                      <Building className="w-2.5 h-2.5 text-emerald-400 shrink-0" />
+                                      <span className="truncate">{clv.localVotacion}</span>
+                                    </span>
+                                  )}
                                 </div>
                               </div>
 
@@ -589,10 +600,19 @@ export const GestoresView: React.FC = () => {
                                     {rlv.nombreCompleto}
                                   </span>
                                 </div>
-                                <div className="pl-5 mt-0.5">
-                                  <span className="font-mono text-[10px] font-semibold text-indigo-200">
+                                <div className="pl-5 mt-0.5 flex items-center gap-1.5 flex-wrap">
+                                  <span className="font-mono text-[10px] font-semibold text-indigo-200 shrink-0">
                                     {rlv.telefonoRaw || rlv.telefono}
                                   </span>
+                                  {rlv.localVotacion && (
+                                    <span
+                                      className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[8.5px] font-medium text-indigo-100 bg-indigo-950/60 border border-indigo-400/35 max-w-full"
+                                      title={`Local de Votación asignado (I.E): ${rlv.localVotacion}`}
+                                    >
+                                      <Building className="w-2.5 h-2.5 text-indigo-400 shrink-0" />
+                                      <span className="truncate">{rlv.localVotacion}</span>
+                                    </span>
+                                  )}
                                 </div>
                               </div>
 
@@ -634,9 +654,28 @@ export const GestoresView: React.FC = () => {
                               <CheckCircle2 className="w-3 h-3 text-amber-400" />
                               Coordinadores de Mesa (CM)
                             </span>
-                            <span className="text-white/70">
-                              {cms.length} {cms.length === 1 ? 'asignado' : 'asignados'}
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-white/70">
+                                {cms.length} {cms.length === 1 ? 'asignado' : 'asignados'}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  exportarCoordinadoresMesaExcel(
+                                    cms,
+                                    `coordinadores_mesa_${distrito.nombre.toLowerCase().replace(/\s+/g, '_')}`,
+                                    'xls'
+                                  );
+                                  showToast(`Descargando Excel de ${cms.length} CMs de ${distrito.nombre}...`);
+                                }}
+                                className="px-1.5 py-0.5 rounded bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-400/35 text-[8.5px] font-bold flex items-center gap-1 active:scale-95 transition-all cursor-pointer"
+                                title={`Descargar Excel (.xls) de los ${cms.length} Coordinadores de Mesa de ${distrito.nombre}`}
+                              >
+                                <Download className="w-2.5 h-2.5" />
+                                <span>Excel ({cms.length})</span>
+                              </button>
+                            </div>
                           </div>
 
                           {/* List of CMs */}
@@ -658,10 +697,19 @@ export const GestoresView: React.FC = () => {
                                       {cm.nombreCompleto}
                                     </span>
                                   </div>
-                                  <div className="pl-5 mt-0.5">
-                                    <span className="font-mono text-[10px] font-semibold text-amber-200">
+                                  <div className="pl-5 mt-0.5 flex items-center gap-1.5 flex-wrap">
+                                    <span className="font-mono text-[10px] font-semibold text-amber-200 shrink-0">
                                       {cm.telefonoRaw || cm.telefono}
                                     </span>
+                                    {cm.localVotacion && (
+                                      <span
+                                        className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[8.5px] font-medium text-amber-100 bg-amber-950/60 border border-amber-400/35 max-w-full"
+                                        title={`Local de Votación asignado (I.E): ${cm.localVotacion}`}
+                                      >
+                                        <Building className="w-2.5 h-2.5 text-amber-400 shrink-0" />
+                                        <span className="truncate">{cm.localVotacion}</span>
+                                      </span>
+                                    )}
                                   </div>
                                 </div>
 

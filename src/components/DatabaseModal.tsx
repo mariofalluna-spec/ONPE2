@@ -1,7 +1,9 @@
 import React, { useState, useRef } from 'react';
-import { X, Upload, Download, FileText, Database, Check, AlertCircle, RefreshCw, Copy, CheckCircle2 } from 'lucide-react';
+import { X, Upload, Download, FileText, Database, Check, AlertCircle, RefreshCw, Copy, CheckCircle2, FileSpreadsheet } from 'lucide-react';
 import { useElectoral } from '../context/ElectoralContext';
 import { MesaElectoral } from '../types';
+import { LISTA_CM } from '../data/cmData';
+import { exportarCoordinadoresMesaExcel } from '../utils/exportExcel';
 
 export const DatabaseModal: React.FC = () => {
   const {
@@ -363,22 +365,62 @@ export const DatabaseModal: React.FC = () => {
         {/* TAB: EXPORT */}
         {activeTab === 'export' && (
           <div className="space-y-3 text-xs">
-            <p className="opacity-80">
+            {/* Exportar Coordinadores de Mesa a Excel */}
+            <div className="p-3 rounded-xl bg-emerald-950/40 border border-emerald-400/35 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-emerald-300 flex items-center gap-1.5 text-xs">
+                  <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
+                  Coordinadores de Mesa (31 Distritos)
+                </span>
+                <span className="text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-200 px-2 py-0.5 rounded-full border border-emerald-400/30">
+                  {LISTA_CM.length} CMs
+                </span>
+              </div>
+              <p className="text-[11px] opacity-80 leading-relaxed">
+                Descarga la relación oficial de los {LISTA_CM.length} coordinadores de mesa con nombres completos, distritos, celulares y enlaces a WhatsApp, formateado para abrir en Microsoft Excel o Google Sheets.
+              </p>
+              <div className="grid grid-cols-2 gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    exportarCoordinadoresMesaExcel(LISTA_CM, 'coordinadores_de_mesa_31_distritos', 'xls');
+                    showToast('Descargando archivo Excel (.xls)...');
+                  }}
+                  className="py-2 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] flex items-center justify-center gap-1.5 active:scale-95 shadow-sm transition-colors cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Excel (.XLS)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    exportarCoordinadoresMesaExcel(LISTA_CM, 'coordinadores_de_mesa_31_distritos', 'csv');
+                    showToast('Descargando archivo CSV (.csv)...');
+                  }}
+                  className="py-2 px-3 rounded-lg bg-white/10 hover:bg-white/20 text-white font-bold text-[11px] flex items-center justify-center gap-1.5 active:scale-95 border border-white/20 transition-colors cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>CSV (.CSV)</span>
+                </button>
+              </div>
+            </div>
+
+            <p className="opacity-80 pt-1">
               Descarga una copia de seguridad del directorio completo actualmente cargado ({mesas.length} mesas):
             </p>
             <button
               type="button"
               onClick={exportCurrentJson}
-              className="w-full py-3 px-4 rounded-xl bg-white/10 hover:bg-white/20 backdrop-blur-md text-white border border-white/20 font-bold flex items-center justify-center gap-2 active:scale-95"
+              className="w-full py-2.5 px-4 rounded-xl bg-white/10 hover:bg-white/20 backdrop-blur-md text-white border border-white/20 font-bold flex items-center justify-center gap-2 active:scale-95"
             >
               <Download className="w-4 h-4 text-cyan-300" />
-              <span>Exportar Directorio (JSON)</span>
+              <span>Exportar Mesas (JSON)</span>
             </button>
 
             <button
               type="button"
               onClick={resetToDefaultData}
-              className="w-full py-2.5 px-4 rounded-xl bg-rose-950/40 hover:bg-rose-950/60 backdrop-blur-md text-rose-300 border border-rose-500/30 font-bold flex items-center justify-center gap-1.5 active:scale-95 text-xs"
+              className="w-full py-2 px-4 rounded-xl bg-rose-950/40 hover:bg-rose-950/60 backdrop-blur-md text-rose-300 border border-rose-500/30 font-bold flex items-center justify-center gap-1.5 active:scale-95 text-xs"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               <span>Restablecer a Directorio Inicial (Huacachina / Ica)</span>

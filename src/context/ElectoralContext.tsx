@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { MesaElectoral, ContactoElectoral, ViewMode } from '../types';
 import { INITIAL_MESAS } from '../data/mockElectoralData';
-import { HD_WALLPAPERS, WallpaperItem, HUACACHINA_WALLPAPER } from '../data/wallpapers';
+import { HD_WALLPAPERS, WallpaperItem, HUACACHINA_WALLPAPER, HUACACHINA_DIA_WALLPAPER, HUACACHINA_NOCHE_WALLPAPER, getCurrentScheduledWallpaper, isNightTimeBySchedule } from '../data/wallpapers';
 import { playAppleWindowOpen, playAppleWindowClose, playAppleTap, playAppleWhatsApp, playAppleCall } from '../utils/appleSound';
 
 interface WallpaperConfig {
@@ -44,10 +44,13 @@ interface ElectoralContextType {
   setShowVoiceModal: (val: boolean) => void;
   showDbModal: boolean;
   setShowDbModal: (val: boolean) => void;
+  showSupabaseModal: boolean;
+  setShowSupabaseModal: (val: boolean) => void;
   showWallpaperModal: boolean;
   setShowWallpaperModal: (val: boolean) => void;
   showInstallModal: boolean;
   setShowInstallModal: (val: boolean) => void;
+  isNightTime: boolean;
   immersiveMode: boolean;
   setImmersiveMode: (val: boolean | ((prev: boolean) => boolean)) => void;
   filteredMesas: MesaElectoral[];
@@ -123,23 +126,40 @@ export const ElectoralProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     return true; // Default to dark mode for stunning contrast with Huacachina wallpaper
   });
 
-  // 4. Wallpaper state - Single official Huacachina Milky Way wallpaper
+  // 4. Wallpaper state - Dynamic Scheduled Day/Night Wallpaper (Cambio a las 6:10 PM)
+  const [scheduledWallpaper, setScheduledWallpaper] = useState<WallpaperItem>(() => getCurrentScheduledWallpaper());
+  const [isNightTime, setIsNightTime] = useState<boolean>(() => isNightTimeBySchedule());
   const [wallpaperIndex, setWallpaperIndex] = useState<number>(0);
   const [autoRotateWallpapers, setAutoRotateWallpapers] = useState<boolean>(false);
   const [rotationInterval, setRotationIntervalState] = useState<number>(180);
+
+  // Interval to check schedule (every 10 seconds) so transition at 6:10 PM (18:10) happens live
+  useEffect(() => {
+    const updateSchedule = () => {
+      const isNight = isNightTimeBySchedule();
+      setIsNightTime(isNight);
+      const currentScheduled = getCurrentScheduledWallpaper();
+      setScheduledWallpaper(currentScheduled);
+    };
+
+    updateSchedule();
+    const interval = setInterval(updateSchedule, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
   const setRotationInterval = (seconds: number) => {
     setRotationIntervalState(seconds);
   };
 
   const [wallpaper, setWallpaper] = useState<WallpaperConfig>(() => {
+    const currentInit = getCurrentScheduledWallpaper();
     try {
       const saved = localStorage.getItem(STORAGE_KEY_WALLPAPER);
       if (saved) {
         const parsed = JSON.parse(saved);
         if (parsed && typeof parsed.dimOpacity === 'number') {
           return {
-            imageUrl: HUACACHINA_WALLPAPER.imageUrl,
+            imageUrl: currentInit.imageUrl,
             isCustom: false,
             dimOpacity: parsed.dimOpacity ?? 15,
             blurAmount: parsed.blurAmount ?? 0,
@@ -150,12 +170,27 @@ export const ElectoralProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       // ignore
     }
     return {
-      imageUrl: HUACACHINA_WALLPAPER.imageUrl,
+      imageUrl: currentInit.imageUrl,
       isCustom: false,
       dimOpacity: 15, // Crisp, vibrant background
       blurAmount: 0,
     };
   });
+
+  // Keep wallpaper image URL updated to scheduled day/night if not custom
+  useEffect(() => {
+    if (!wallpaper.isCustom) {
+      setWallpaper(prev => {
+        if (prev.imageUrl !== scheduledWallpaper.imageUrl) {
+          return {
+            ...prev,
+            imageUrl: scheduledWallpaper.imageUrl,
+          };
+        }
+        return prev;
+      });
+    }
+  }, [scheduledWallpaper, wallpaper.isCustom]);
 
   // Keep localStorage in sync with wallpaper settings
   useEffect(() => {
@@ -168,26 +203,29 @@ export const ElectoralProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   // Current wallpaper metadata item
   const currentWallpaperItem = useMemo(() => {
-    return HD_WALLPAPERS[wallpaperIndex] || HUACACHINA_WALLPAPER;
-  }, [wallpaperIndex]);
+    if (!wallpaper.isCustom) {
+      return scheduledWallpaper;
+    }
+    return HD_WALLPAPERS[wallpaperIndex] || scheduledWallpaper;
+  }, [wallpaperIndex, scheduledWallpaper, wallpaper.isCustom]);
 
   // Select wallpaper by index
   const selectWallpaperByIndex = (index: number) => {
-    const validIndex = 0;
-    setWallpaperIndex(validIndex);
+    const target = HD_WALLPAPERS[index] || scheduledWallpaper;
+    setWallpaperIndex(index);
     setWallpaper(current => ({
       ...current,
-      imageUrl: HUACACHINA_WALLPAPER.imageUrl,
+      imageUrl: target.imageUrl,
       isCustom: false,
     }));
   };
 
   const nextWallpaper = () => {
-    selectWallpaperByIndex(0);
+    selectWallpaperByIndex(isNightTime ? 0 : 1);
   };
 
   const prevWallpaper = () => {
-    selectWallpaperByIndex(0);
+    selectWallpaperByIndex(isNightTime ? 0 : 1);
   };
 
   // 5. Immersive mode state to appreciate the wallpaper freely
@@ -196,6 +234,7 @@ export const ElectoralProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   // 6. Modals & Voice state
   const [showVoiceModal, setShowVoiceModalState] = useState<boolean>(false);
   const [showDbModal, setShowDbModalState] = useState<boolean>(false);
+  const [showSupabaseModal, setShowSupabaseModalState] = useState<boolean>(false);
   const [showWallpaperModal, setShowWallpaperModalState] = useState<boolean>(false);
   const [showInstallModal, setShowInstallModalState] = useState<boolean>(false);
 
@@ -208,6 +247,11 @@ export const ElectoralProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     if (val) playAppleWindowOpen();
     else playAppleWindowClose();
     setShowDbModalState(val);
+  };
+  const setShowSupabaseModal = (val: boolean) => {
+    if (val) playAppleWindowOpen();
+    else playAppleWindowClose();
+    setShowSupabaseModalState(val);
   };
   const setShowWallpaperModal = (val: boolean) => {
     if (val) playAppleWindowOpen();
@@ -519,10 +563,13 @@ export const ElectoralProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         setShowVoiceModal,
         showDbModal,
         setShowDbModal,
+        showSupabaseModal,
+        setShowSupabaseModal,
         showWallpaperModal,
         setShowWallpaperModal,
         showInstallModal,
         setShowInstallModal,
+        isNightTime,
         immersiveMode,
         setImmersiveMode,
         filteredMesas,

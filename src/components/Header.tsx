@@ -1,11 +1,10 @@
 import React from 'react';
-import { Database, Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { useElectoral } from '../context/ElectoralContext';
 import { OdpeSunLogo } from './OdpeSunLogo';
 
 export const Header: React.FC = () => {
   const {
-    setShowDbModal,
     immersiveMode,
     setImmersiveMode,
   } = useElectoral();
@@ -31,25 +30,14 @@ export const Header: React.FC = () => {
           id="btn-toggle-immersive"
           type="button"
           onClick={() => setImmersiveMode(prev => !prev)}
-          title={immersiveMode ? 'Mostrar directorio' : 'Ver fondo'}
-          aria-label="Ver fondo"
+          title={immersiveMode ? 'Mostrar directorio' : 'Ver solo fondo de pantalla'}
+          aria-label="Ver solo fondo de pantalla"
           className="p-1 rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition-all active:scale-95"
         >
           {immersiveMode ? <EyeOff className="w-3.5 h-3.5 text-cyan-300" /> : <Eye className="w-3.5 h-3.5 text-cyan-300" />}
-        </button>
-
-        {/* Database button */}
-        <button
-          id="btn-open-database"
-          type="button"
-          onClick={() => setShowDbModal(true)}
-          title="Base de Datos"
-          aria-label="Base de Datos"
-          className="p-1 rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition-all active:scale-95"
-        >
-          <Database className="w-3.5 h-3.5 text-cyan-200" />
         </button>
       </div>
     </header>
   );
 };
+

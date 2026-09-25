@@ -341,9 +341,9 @@ export const LISTA_31_DISTRITOS: DistritoInfo[] = [
     provincia: 'Palpa',
     localPrincipal: 'I.E. San Martín de Porres',
     direccion: 'Calle Los Libertadores 115, Río Grande',
-    coordinadorNombre: 'YOMIRA CHE',
-    coordinadorTelefono: '+51963488517',
-    coordinadorEmail: 'yomira.che@odpeica.pe',
+    coordinadorNombre: 'YSRAEL ROJAS',
+    coordinadorTelefono: '+51992703100',
+    coordinadorEmail: 'ysrael.rojas@odpeica.pe',
     mesasCount: 3,
   },
   {
