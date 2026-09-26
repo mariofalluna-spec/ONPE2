@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
-import { MesaElectoral, ContactoElectoral, ViewMode } from '../types';
+import { MesaElectoral, ContactoElectoral, ViewMode, ButtonStyleOption } from '../types';
 import { INITIAL_MESAS } from '../data/mockElectoralData';
 import { HD_WALLPAPERS, WallpaperItem, HUACACHINA_WALLPAPER, HUACACHINA_DIA_WALLPAPER, HUACACHINA_NOCHE_WALLPAPER, getCurrentScheduledWallpaper, isNightTimeBySchedule } from '../data/wallpapers';
 import { playAppleWindowOpen, playAppleWindowClose, playAppleTap, playAppleWhatsApp, playAppleCall } from '../utils/appleSound';
@@ -50,6 +50,13 @@ interface ElectoralContextType {
   setShowWallpaperModal: (val: boolean) => void;
   showInstallModal: boolean;
   setShowInstallModal: (val: boolean) => void;
+  buttonStyle: ButtonStyleOption;
+  setButtonStyle: (style: ButtonStyleOption) => void;
+  showButtonStyleModal: boolean;
+  setShowButtonStyleModal: (val: boolean) => void;
+  layoutMode: 'mobile' | 'pc';
+  setLayoutMode: (mode: 'mobile' | 'pc') => void;
+  toggleLayoutMode: () => void;
   isNightTime: boolean;
   immersiveMode: boolean;
   setImmersiveMode: (val: boolean | ((prev: boolean) => boolean)) => void;
@@ -70,6 +77,7 @@ const ElectoralContext = createContext<ElectoralContextType | undefined>(undefin
 const STORAGE_KEY_MESAS = 'electoral_bing_directorio_mesas_v11';
 const STORAGE_KEY_DARK_MODE = 'electoral_bing_dark_mode';
 const STORAGE_KEY_WALLPAPER = 'electoral_bing_wallpaper_v5_huacachina';
+const STORAGE_KEY_BUTTON_STYLE = 'odpe_button_style_theme_v1';
 
 export const ElectoralProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // 1. Mesas and directory state with localStorage
@@ -133,17 +141,17 @@ export const ElectoralProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [autoRotateWallpapers, setAutoRotateWallpapers] = useState<boolean>(false);
   const [rotationInterval, setRotationIntervalState] = useState<number>(180);
 
-  // Interval to check schedule (every 10 seconds) so transition at 6:10 PM (18:10) happens live
+  // Interval to check schedule (every 30 seconds) so transition at 6:10 PM (18:10) happens live without unnecessary re-renders
   useEffect(() => {
     const updateSchedule = () => {
       const isNight = isNightTimeBySchedule();
-      setIsNightTime(isNight);
+      setIsNightTime(prev => (prev !== isNight ? isNight : prev));
       const currentScheduled = getCurrentScheduledWallpaper();
-      setScheduledWallpaper(currentScheduled);
+      setScheduledWallpaper(prev => (prev.id !== currentScheduled.id ? currentScheduled : prev));
     };
 
     updateSchedule();
-    const interval = setInterval(updateSchedule, 10000);
+    const interval = setInterval(updateSchedule, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -237,6 +245,82 @@ export const ElectoralProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [showSupabaseModal, setShowSupabaseModalState] = useState<boolean>(false);
   const [showWallpaperModal, setShowWallpaperModalState] = useState<boolean>(false);
   const [showInstallModal, setShowInstallModalState] = useState<boolean>(false);
+  const [showButtonStyleModal, setShowButtonStyleModalState] = useState<boolean>(false);
+
+  // Helper to auto-detect PC vs Mobile
+  const detectDevice = (): 'mobile' | 'pc' => {
+    if (typeof window === 'undefined') return 'mobile';
+    const isLargeScreen = window.innerWidth >= 1024;
+    const isTouchDevice = 'ontouchstart' in window || (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0);
+    const hasFinePointer = typeof window !== 'undefined' && window.matchMedia ? window.matchMedia('(pointer: fine)').matches : false;
+    if (isLargeScreen || (window.innerWidth >= 768 && hasFinePointer && !isTouchDevice)) {
+      return 'pc';
+    }
+    return 'mobile';
+  };
+
+  // 7. Layout mode: auto-detects PC vs Mobile with manual override support
+  const [layoutMode, setLayoutModeState] = useState<'mobile' | 'pc'>(() => {
+    try {
+      const manual = sessionStorage.getItem('odpe_layout_manual_override');
+      if (manual === 'mobile' || manual === 'pc') return manual;
+      const saved = localStorage.getItem('odpe_layout_mode_v1');
+      if (saved === 'mobile' || saved === 'pc') return saved;
+    } catch {
+      // fallback
+    }
+    return detectDevice();
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      try {
+        const manual = sessionStorage.getItem('odpe_layout_manual_override');
+        if (manual) return;
+      } catch {
+        // ignore
+      }
+      setLayoutModeState(detectDevice());
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const setLayoutMode = (mode: 'mobile' | 'pc') => {
+    setLayoutModeState(mode);
+    try {
+      sessionStorage.setItem('odpe_layout_manual_override', mode);
+      localStorage.setItem('odpe_layout_mode_v1', mode);
+    } catch {
+      // ignore
+    }
+  };
+
+  const toggleLayoutMode = () => {
+    setLayoutMode(layoutMode === 'mobile' ? 'pc' : 'mobile');
+  };
+
+  // 8. Button Style Theme (3 options, default cristal-neon)
+  const [buttonStyle, setButtonStyleState] = useState<ButtonStyleOption>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_BUTTON_STYLE);
+      if (saved === 'cristal-neon' || saved === 'capsula-solida' || saved === 'cyber-minimal') {
+        return saved;
+      }
+    } catch {
+      // fallback
+    }
+    return 'cristal-neon'; // Default to ultra-modern Cristal Neón
+  });
+
+  const setButtonStyle = (style: ButtonStyleOption) => {
+    setButtonStyleState(style);
+    try {
+      localStorage.setItem(STORAGE_KEY_BUTTON_STYLE, style);
+    } catch {
+      // ignore
+    }
+  };
 
   const setShowVoiceModal = (val: boolean) => {
     if (val) playAppleWindowOpen();
@@ -262,6 +346,11 @@ export const ElectoralProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     if (val) playAppleWindowOpen();
     else playAppleWindowClose();
     setShowInstallModalState(val);
+  };
+  const setShowButtonStyleModal = (val: boolean) => {
+    if (val) playAppleWindowOpen();
+    else playAppleWindowClose();
+    setShowButtonStyleModalState(val);
   };
   const [isListening, setIsListening] = useState<boolean>(false);
   const [speechTranscript, setSpeechTranscript] = useState<string>('');
@@ -569,6 +658,13 @@ export const ElectoralProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         setShowWallpaperModal,
         showInstallModal,
         setShowInstallModal,
+        buttonStyle,
+        setButtonStyle,
+        showButtonStyleModal,
+        setShowButtonStyleModal,
+        layoutMode,
+        setLayoutMode,
+        toggleLayoutMode,
         isNightTime,
         immersiveMode,
         setImmersiveMode,

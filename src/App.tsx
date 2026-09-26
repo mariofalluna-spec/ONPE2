@@ -1,7 +1,6 @@
 import React from 'react';
 import { ElectoralProvider, useElectoral } from './context/ElectoralContext';
 import { Header } from './components/Header';
-import { QuickActions } from './components/QuickActions';
 import { VotingTableCard } from './components/VotingTableCard';
 import { GestoresView } from './components/GestoresView';
 import { TableDetailModal } from './components/TableDetailModal';
@@ -43,6 +42,7 @@ const MainContent: React.FC = () => {
     setShowInstallModal,
     showSupabaseModal,
     setShowSupabaseModal,
+    layoutMode,
   } = useElectoral();
 
   // 1-Minute Inactivity Timer for Wallpaper Screensaver Mode (despeja y muestra solo fondo tras 1 min)
@@ -177,13 +177,13 @@ const MainContent: React.FC = () => {
   const touchStartYRef = React.useRef<number>(0);
   const touchStartTimeRef = React.useRef<number>(0);
   const [swipeBackProgress, setSwipeBackProgress] = React.useState<number>(0);
+  const swipeRafRef = React.useRef<number | null>(null);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length !== 1) return;
     touchStartXRef.current = e.touches[0].clientX;
     touchStartYRef.current = e.touches[0].clientY;
     touchStartTimeRef.current = Date.now();
-    setSwipeBackProgress(0);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
@@ -191,17 +191,25 @@ const MainContent: React.FC = () => {
     const deltaX = e.touches[0].clientX - touchStartXRef.current;
     const deltaY = Math.abs(e.touches[0].clientY - touchStartYRef.current);
 
-    // If swiping towards the right (backwards) and horizontal movement dominates
-    if (deltaX > 15 && deltaX > deltaY * 1.1) {
-      setSwipeBackProgress(Math.min(deltaX / 90, 1));
-    } else {
-      setSwipeBackProgress(0);
+    // Only activate indicator if deliberate back swipe
+    if (deltaX > 25 && deltaX > deltaY * 1.3) {
+      if (!swipeRafRef.current) {
+        swipeRafRef.current = requestAnimationFrame(() => {
+          setSwipeBackProgress(Math.min(deltaX / 90, 1));
+          swipeRafRef.current = null;
+        });
+      }
     }
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
+    if (swipeRafRef.current) {
+      cancelAnimationFrame(swipeRafRef.current);
+      swipeRafRef.current = null;
+    }
+    setSwipeBackProgress(0);
+
     if (!isNotInMainDistritos) {
-      setSwipeBackProgress(0);
       return;
     }
     const touchEndX = e.changedTouches[0].clientX;
@@ -209,8 +217,6 @@ const MainContent: React.FC = () => {
     const deltaX = touchEndX - touchStartXRef.current;
     const deltaY = Math.abs(touchEndY - touchStartYRef.current);
     const timeTaken = Date.now() - touchStartTimeRef.current;
-
-    setSwipeBackProgress(0);
 
     // Threshold for back swipe:
     // 1. Swiping right at least 45px with predominantly horizontal direction
@@ -331,12 +337,16 @@ const MainContent: React.FC = () => {
         />
       )}
 
-      {/* APPLICATION SHELL - Responsive fluid container allowing all 31 districts to fit in a single screen */}
+      {/* APPLICATION SHELL - Responsive fluid container allowing all 31 districts to fit in a single screen or full PC mode */}
       <div
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        className={`relative z-10 w-full max-w-md sm:max-w-xl md:max-w-3xl lg:max-w-4xl mx-auto min-h-screen flex flex-col pb-2 transition-opacity duration-500 ${
+        className={`relative z-10 w-full mx-auto transition-all duration-300 ${
+          layoutMode === 'pc'
+            ? 'max-w-[1440px] 2xl:max-w-[1680px] px-3 sm:px-6 min-h-screen flex flex-col pb-4'
+            : 'max-w-md h-[100dvh] flex flex-col overflow-hidden px-1 sm:px-2 pb-1'
+        } ${
           immersiveMode ? 'opacity-0 pointer-events-none' : 'opacity-100'
         }`}
       >
@@ -354,14 +364,11 @@ const MainContent: React.FC = () => {
           </div>
         )}
 
-        {/* Bing Header */}
+        {/* Executive Header */}
         <Header />
 
-        {/* Bing Quick Action Navigation Tiles */}
-        <QuickActions />
-
         {/* Dynamic Views */}
-        <main className="flex-1 w-full space-y-1 pb-1">
+        <main className={`w-full ${layoutMode === 'mobile' ? 'flex-1 flex flex-col min-h-0 overflow-hidden' : 'flex-1 space-y-3 pb-2'}`}>
               {/* If viewMode is 'distritos', show the 31 Districts Grid */}
               {viewMode === 'distritos' && <DistritosGrid />}
 

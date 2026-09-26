@@ -64,6 +64,20 @@ export interface CMInfo {
   localVotacion?: string;
 }
 
+export interface ARAInfo {
+  id: string;
+  apellidoPaterno: string;
+  nombres: string;
+  nombreCompleto: string; // e.g. "SANDRA ALTAMIRANO"
+  telefono: string; // "+51951773723"
+  telefonoRaw: string; // "951773723"
+  cargo: 'ARA';
+  distrito: string; // e.g. "Tate", "Ica 1", "Parcona 2"
+  provincia: string; // "Ica" | "Nasca" | "Palpa"
+  localVotacion?: string;
+  lugar?: string;
+}
+
 export interface MesaElectoral {
   id: string;
   numeroMesa: string; // e.g. "048201"
@@ -85,3 +99,8 @@ export interface MesaElectoral {
 }
 
 export type ViewMode = 'distritos' | 'todas' | 'coordinadores' | 'miembros' | 'asignados';
+
+export type ButtonStyleOption = 'cristal-neon' | 'capsula-solida' | 'cyber-minimal';
+
+export type LayoutMode = 'mobile' | 'pc';
+

@@ -3,6 +3,7 @@ import { Phone, MapPin, Building, ChevronRight, Users } from 'lucide-react';
 import { MesaElectoral } from '../types';
 import { useElectoral } from '../context/ElectoralContext';
 import { WhatsAppAppIcon } from './WhatsAppAppIcon';
+import { BUTTON_THEMES } from '../utils/buttonThemes';
 
 interface VotingTableCardProps {
   mesa: MesaElectoral;
@@ -10,7 +11,8 @@ interface VotingTableCardProps {
 }
 
 export const VotingTableCard: React.FC<VotingTableCardProps> = ({ mesa, showCoordinator = false }) => {
-  const { darkMode, setSelectedMesa, callContact, sendWhatsApp } = useElectoral();
+  const { darkMode, setSelectedMesa, callContact, sendWhatsApp, buttonStyle } = useElectoral();
+  const theme = BUTTON_THEMES[buttonStyle] || BUTTON_THEMES['cristal-neon'];
 
   const coord = mesa.coordinadorDistrital;
   const presidente = mesa.miembrosMesa?.find(m => m.cargo.toLowerCase().includes('presidente')) || mesa.miembrosMesa?.[0];
@@ -74,7 +76,7 @@ export const VotingTableCard: React.FC<VotingTableCardProps> = ({ mesa, showCoor
                 callContact(coord.telefono, coord.nombre, 'Coordinador Distrital', mesa.distrito);
               }}
               title={`Llamar a ${coord.nombre}`}
-              className="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-white font-bold text-xs flex items-center gap-1 shadow-sm active:scale-95 transition-all"
+              className={`px-2.5 py-1.5 rounded-xl text-xs font-black flex items-center gap-1 cursor-pointer ${theme.callButtonLarge('emerald')}`}
             >
               <Phone className="w-3 h-3 fill-current" />
               <span>Llamar</span>
@@ -87,9 +89,9 @@ export const VotingTableCard: React.FC<VotingTableCardProps> = ({ mesa, showCoor
                 sendWhatsApp(coord.telefono, coord.nombre, 'Coordinador Distrital', mesa.distrito);
               }}
               title="WhatsApp al coordinador"
-              className="p-1.5 rounded-xl bg-emerald-600/30 hover:bg-emerald-600/40 text-emerald-300 border border-emerald-400/30 active:scale-95 flex items-center justify-center transition-all shadow-xs"
+              className={theme.whatsAppButton}
             >
-              <WhatsAppAppIcon size={18} />
+              <WhatsAppAppIcon size={20} />
             </button>
           </div>
         </div>
@@ -105,14 +107,14 @@ export const VotingTableCard: React.FC<VotingTableCardProps> = ({ mesa, showCoor
             <span className="font-mono text-[11px] opacity-80 text-white">{presidente.telefono}</span>
           </div>
 
-          <div className="flex items-center gap-1 shrink-0">
+          <div className="flex items-center gap-1.5 shrink-0">
             <button
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 callContact(presidente.telefono, presidente.nombre, presidente.cargo, `Mesa ${mesa.numeroMesa}`);
               }}
-              className="px-2 py-1 rounded-lg bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-300 border border-emerald-500/30 font-bold text-[11px] flex items-center gap-1 active:scale-95"
+              className={`px-2.5 py-1 rounded-lg font-black text-xs flex items-center gap-1 cursor-pointer ${theme.callButtonLarge('cyan')}`}
             >
               <Phone className="w-2.5 h-2.5 fill-current" />
               <span>Llamar</span>
@@ -123,10 +125,10 @@ export const VotingTableCard: React.FC<VotingTableCardProps> = ({ mesa, showCoor
                 e.stopPropagation();
                 sendWhatsApp(presidente.telefono, presidente.nombre, presidente.cargo, `Mesa ${mesa.numeroMesa}`);
               }}
-              className="p-1 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/40 border border-emerald-500/30 active:scale-95 flex items-center justify-center transition-all shadow-xs"
+              className={theme.whatsAppButton}
               title={`WhatsApp a ${presidente.nombre}`}
             >
-              <WhatsAppAppIcon size={16} />
+              <WhatsAppAppIcon size={18} />
             </button>
           </div>
         </div>

@@ -5360,15 +5360,22 @@ function normalizeDistrictName(name: string): string {
     .trim();
 }
 
+const cmByDistritoCache = new Map<string, CMInfo[]>();
+
 /**
- * Obtiene los CM asignados a un distrito específico
+ * Obtiene los CM asignados a un distrito específico (con cache en memoria para rendimiento instantáneo)
  */
 export function getCMsByDistrito(distritoNombre: string): CMInfo[] {
   const normalized = normalizeDistrictName(distritoNombre);
-  return LISTA_CM.filter(cm => {
+  if (cmByDistritoCache.has(normalized)) {
+    return cmByDistritoCache.get(normalized)!;
+  }
+  const result = LISTA_CM.filter(cm => {
     const cmNorm = normalizeDistrictName(cm.distrito);
     return cmNorm === normalized || cmNorm.replace(/\s+/g, '') === normalized.replace(/\s+/g, '');
   });
+  cmByDistritoCache.set(normalized, result);
+  return result;
 }
 
 /**

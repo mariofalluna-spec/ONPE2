@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Phone, Building, Users, Shield, PhoneCall, Search, X, CheckCircle2, UserCheck, MapPin, ChevronLeft, Download } from 'lucide-react';
 import { useElectoral } from '../context/ElectoralContext';
-import { ContactoElectoral, CLVInfo, RLVInfo, CMInfo } from '../types';
+import { ContactoElectoral, CLVInfo, RLVInfo, CMInfo, ARAInfo } from '../types';
 import { WhatsAppAppIcon } from './WhatsAppAppIcon';
 import { LISTA_31_DISTRITOS, DistritoInfo } from '../data/mockElectoralData';
 import { LISTA_CLV, getCLVsByDistrito } from '../data/clvData';
 import { LISTA_RLV, getRLVsByDistrito } from '../data/rlvData';
 import { LISTA_CM, getCMsByDistrito } from '../data/cmData';
+import { LISTA_ARA, getARAsByDistrito } from '../data/araData';
 import { exportarCoordinadoresMesaExcel } from '../utils/exportExcel';
 
 /**
@@ -45,7 +46,7 @@ export const GestoresView: React.FC = () => {
   // Filters for Coordinadores & CLV view
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedProvincia, setSelectedProvincia] = useState<'Todos' | 'Ica' | 'Nasca' | 'Palpa'>('Todos');
-  const [filterTipo, setFilterTipo] = useState<'todos' | 'con_clv' | 'con_rlv' | 'con_cm'>('todos');
+  const [filterTipo, setFilterTipo] = useState<'todos' | 'con_clv' | 'con_rlv' | 'con_cm' | 'con_ara'>('todos');
   const [expandedCmDistricts, setExpandedCmDistricts] = useState<Record<number, boolean>>({});
 
   // When a district is focused, auto-expand its CMs so the user immediately sees all personnel
@@ -62,12 +63,13 @@ export const GestoresView: React.FC = () => {
     setExpandedCmDistricts(prev => ({ ...prev, [distId]: !prev[distId] }));
   };
 
-  // 1. Grouped Coordinadores, CLVs, RLVs & CMs by District in exact official order
+  // 1. Grouped Coordinadores, CLVs, RLVs, CMs & ARAs by District in exact official order
   const distritosConCoordinacion = useMemo(() => {
     return LISTA_31_DISTRITOS.map((dist) => {
       const clvs = getCLVsByDistrito(dist.nombre);
       const rlvs = getRLVsByDistrito(dist.nombre);
       const cms = getCMsByDistrito(dist.nombre);
+      const aras = getARAsByDistrito(dist.nombre);
       const mesasDelDistrito = filteredMesas.filter(m => m.distrito === dist.nombre);
       const mesasNumeros = mesasDelDistrito.map(m => m.numeroMesa);
 
@@ -90,6 +92,10 @@ export const GestoresView: React.FC = () => {
         cms: cms.map(cm => ({
           ...cm,
           nombreCompleto: formatNombreApellidoMayusculas(cm.nombreCompleto),
+        })),
+        aras: aras.map(a => ({
+          ...a,
+          nombreCompleto: formatNombreApellidoMayusculas(a.nombreCompleto),
         })),
         mesasCount: mesasNumeros.length || dist.mesasCount,
         mesasNumeros,
@@ -120,6 +126,9 @@ export const GestoresView: React.FC = () => {
       if (filterTipo === 'con_cm' && item.cms.length === 0) {
         return false;
       }
+      if (filterTipo === 'con_ara' && item.aras.length === 0) {
+        return false;
+      }
 
       // 3. Search term filter
       if (!searchTerm.trim()) return true;
@@ -144,8 +153,13 @@ export const GestoresView: React.FC = () => {
               cm.telefono.includes(term) ||
               cm.telefonoRaw.includes(term)
       );
+      const matchAra = item.aras.some(
+        a => a.nombreCompleto.toLowerCase().includes(term) ||
+             a.telefono.includes(term) ||
+             a.telefonoRaw.includes(term)
+      );
 
-      return matchDistrito || matchProvincia || matchCoord || matchClv || matchRlv || matchCm;
+      return matchDistrito || matchProvincia || matchCoord || matchClv || matchRlv || matchCm || matchAra;
     });
   }, [distritosConCoordinacion, selectedProvincia, filterTipo, searchTerm]);
 
@@ -162,9 +176,13 @@ export const GestoresView: React.FC = () => {
     return filteredDistritosList.reduce((acc, d) => acc + d.cms.length, 0);
   }, [filteredDistritosList]);
 
+  const totalArasCount = useMemo(() => {
+    return filteredDistritosList.reduce((acc, d) => acc + d.aras.length, 0);
+  }, [filteredDistritosList]);
+
   const totalPersonalCount = useMemo(() => {
-    return filteredDistritosList.length + totalClvsCount + totalRlvsCount + totalCmsCount;
-  }, [filteredDistritosList, totalClvsCount, totalRlvsCount, totalCmsCount]);
+    return filteredDistritosList.length + totalClvsCount + totalRlvsCount + totalCmsCount + totalArasCount;
+  }, [filteredDistritosList, totalClvsCount, totalRlvsCount, totalCmsCount, totalArasCount]);
 
   // 2. All Miembros de Mesa from filtered tables
   const miembros = useMemo(() => {
@@ -210,7 +228,7 @@ export const GestoresView: React.FC = () => {
               setFilterDistrito('');
               setViewMode('distritos');
             }}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-200 border border-cyan-400/40 text-[10.5px] font-black transition-all active:scale-95 shadow-xs"
+            className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:to-rose-500 text-white border border-red-400/80 ring-1 ring-red-400/50 text-[10.5px] font-black tracking-wider uppercase transition-all active:scale-95 shadow-md shadow-red-600/40 cursor-pointer select-none"
             title="Volver a los 31 Distritos"
           >
             <ChevronLeft className="w-3.5 h-3.5" />
@@ -243,68 +261,6 @@ export const GestoresView: React.FC = () => {
       {/* ============================================================== */}
       {viewMode === 'coordinadores' && (
         <div className="space-y-2.5">
-          {/* Focused District Banner when navigated from District Card */}
-          {filterDistrito && (
-            <div className="flex items-center justify-between p-2 rounded-xl bg-cyan-950/80 border border-cyan-400/50 backdrop-blur-md shadow-lg text-white">
-              <div className="flex items-center gap-2 min-w-0">
-                <button
-                  type="button"
-                  id="btn-back-to-distritos-card"
-                  onClick={() => {
-                    setFilterDistrito('');
-                    setViewMode('distritos');
-                  }}
-                  className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black text-xs active:scale-95 transition-all shadow-md shrink-0"
-                >
-                  <ChevronLeft className="w-3.5 h-3.5" />
-                  <span>31 Distritos</span>
-                </button>
-                <div className="flex flex-col text-left min-w-0">
-                  <span className="text-xs font-black uppercase text-cyan-200 tracking-wide truncate">
-                    Personal de {filterDistrito}
-                  </span>
-                  <span className="text-[9.5px] text-white/80 truncate">
-                    Coordinador Distrital • CLVs • RLVs • CMs
-                  </span>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                id="btn-view-all-distritos"
-                onClick={() => setFilterDistrito('')}
-                className="px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold transition-all border border-white/20 shrink-0"
-                title="Mostrar los 31 distritos juntos"
-              >
-                Ver los 31 distritos
-              </button>
-            </div>
-          )}
-
-          {/* Summary Metric Strip */}
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5 p-1 rounded-xl bg-slate-950/40 border border-white/15 backdrop-blur-md text-center">
-            <div className="p-1 rounded-lg bg-cyan-500/10 border border-cyan-400/20">
-              <div className="text-[9px] font-bold text-cyan-200 uppercase tracking-tight">Coord. Distritales</div>
-              <div className="text-sm font-black text-white">31</div>
-            </div>
-            <div className="p-1 rounded-lg bg-emerald-500/10 border border-emerald-400/20">
-              <div className="text-[9px] font-bold text-emerald-200 uppercase tracking-tight">CLV Asignados</div>
-              <div className="text-sm font-black text-emerald-300">{LISTA_CLV.length}</div>
-            </div>
-            <div className="p-1 rounded-lg bg-indigo-500/10 border border-indigo-400/20">
-              <div className="text-[9px] font-bold text-indigo-200 uppercase tracking-tight">RLV Asignados</div>
-              <div className="text-sm font-black text-indigo-300">{LISTA_RLV.length}</div>
-            </div>
-            <div className="p-1 rounded-lg bg-amber-500/10 border border-amber-400/20">
-              <div className="text-[9px] font-bold text-amber-200 uppercase tracking-tight">CM Asignados</div>
-              <div className="text-sm font-black text-amber-300">{LISTA_CM.length}</div>
-            </div>
-            <div className="col-span-2 sm:col-span-1 p-1 rounded-lg bg-rose-500/10 border border-rose-400/20">
-              <div className="text-[9px] font-bold text-rose-200 uppercase tracking-tight">Total Directorio</div>
-              <div className="text-sm font-black text-rose-300">{31 + LISTA_CLV.length + LISTA_RLV.length + LISTA_CM.length}</div>
-            </div>
-          </div>
-
           {/* Quick Search & Province Filter Bar */}
           <div className="space-y-1.5 p-2 rounded-xl bg-black/25 backdrop-blur-md border border-white/15">
             {/* Search input */}
@@ -398,13 +354,24 @@ export const GestoresView: React.FC = () => {
                 >
                   Con CM ({totalCmsCount})
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setFilterTipo('con_ara')}
+                  className={`px-2 py-0.5 rounded-md font-bold transition-all ${
+                    filterTipo === 'con_ara'
+                      ? 'bg-rose-500 text-white font-black shadow-xs'
+                      : 'bg-rose-950/40 text-rose-300 border border-rose-500/30 hover:bg-rose-900/40'
+                  }`}
+                >
+                  Con ARA ({totalArasCount})
+                </button>
               </div>
             </div>
           </div>
 
-          {/* District Cards with Coordinador Distrital + Assigned CLVs + Assigned RLVs + Assigned CMs */}
+          {/* District Cards with Coordinador Distrital + Assigned CLVs + Assigned RLVs + Assigned CMs + Assigned ARAs */}
           <div className="space-y-2">
-            {filteredDistritosList.map(({ distrito, coordinadorDistrital, clvs, rlvs, cms, mesasCount }) => {
+            {filteredDistritosList.map(({ distrito, coordinadorDistrital, clvs, rlvs, cms, aras, mesasCount }) => {
               const provColor = distrito.provincia === 'Ica'
                 ? 'border-sky-400/40 text-sky-200'
                 : distrito.provincia === 'Nasca'
@@ -415,7 +382,7 @@ export const GestoresView: React.FC = () => {
                 <div
                   key={distrito.id}
                   id={`distrito-coordinacion-${distrito.id}`}
-                  className="rounded-2xl border border-white/20 bg-slate-950/45 hover:border-cyan-300/60 text-white backdrop-blur-md shadow-sm transition-all overflow-hidden"
+                  className="fast-list-item rounded-2xl border border-white/20 bg-slate-950/65 hover:border-cyan-300/60 text-white backdrop-blur-sm shadow-sm transition-all overflow-hidden"
                 >
                   {/* Top District Header */}
                   <div className="px-3 py-1.5 bg-black/40 border-b border-white/10 flex items-center justify-between gap-2">
@@ -447,7 +414,12 @@ export const GestoresView: React.FC = () => {
                           {cms.length} {cms.length === 1 ? 'CM' : 'CMs'}
                         </span>
                       )}
-                      {clvs.length === 0 && rlvs.length === 0 && cms.length === 0 && (
+                      {aras.length > 0 && (
+                        <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-400/40 shadow-xs">
+                          {aras.length} {aras.length === 1 ? 'ARA' : 'ARAs'}
+                        </span>
+                      )}
+                      {clvs.length === 0 && rlvs.length === 0 && cms.length === 0 && aras.length === 0 && (
                         <span className="text-[8.5px] font-semibold opacity-60 text-white">
                           Sin asignados
                         </span>
@@ -458,14 +430,14 @@ export const GestoresView: React.FC = () => {
                   {/* Body: Coordinador Distrital + CLV List + RLV List */}
                   <div className="p-2.5 space-y-2.5">
                     {/* 1. COORDINADOR DISTRITAL */}
-                    <div className="p-2 rounded-xl bg-white/5 border border-cyan-500/25 flex items-center justify-between gap-2">
+                    <div className="p-2 rounded-xl bg-cyan-950/30 border border-cyan-500/40 flex items-center justify-between gap-2 shadow-xs">
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1.5 mb-0.5">
-                          <span className="px-1.5 py-0.2 rounded text-[8.5px] font-bold bg-cyan-500/20 text-cyan-200 border border-cyan-400/40">
-                            COORD. DISTRITAL
+                          <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-cyan-500/30 text-cyan-200 border border-cyan-400/60 shadow-xs">
+                            COORDINADOR DISTRITAL
                           </span>
                         </div>
-                        <h4 className="text-[11px] font-bold uppercase tracking-wider text-amber-200 truncate drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
+                        <h4 className="text-[11px] font-black uppercase tracking-wider text-amber-200 truncate drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
                           {coordinadorDistrital.nombre}
                         </h4>
                         <p className="font-mono text-[10.5px] font-bold text-cyan-300 drop-shadow-xs">
@@ -478,7 +450,7 @@ export const GestoresView: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => callContact(coordinadorDistrital.telefono, coordinadorDistrital.nombre, 'Coordinador Distrital', distrito.nombre)}
-                          className="px-2 py-1 rounded-lg bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-white font-bold text-[10px] flex items-center gap-1 shadow-xs active:scale-95 transition-all"
+                          className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-white font-black text-[10px] uppercase flex items-center gap-1 shadow-xs active:scale-95 transition-all"
                           title={`Llamar a ${coordinadorDistrital.nombre}`}
                         >
                           <Phone className="w-2.5 h-2.5 fill-current" />
@@ -498,12 +470,12 @@ export const GestoresView: React.FC = () => {
                     {/* 2. COORDINADORES DE LOCAL (CLV) ASIGNADOS */}
                     {clvs.length > 0 && (
                       <div className="space-y-1 pt-0.5">
-                        <div className="flex items-center justify-between text-[9.5px] font-bold uppercase tracking-wider text-emerald-300 px-0.5">
-                          <span className="flex items-center gap-1">
-                            <UserCheck className="w-3 h-3 text-emerald-400" />
-                            Coordinadores de Local (CLV)
+                        <div className="flex items-center justify-between text-[10px] px-0.5">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-emerald-500/30 text-emerald-200 border border-emerald-400/60 shadow-xs">
+                            <UserCheck className="w-3 h-3 text-emerald-300" />
+                            COORDINADORES DE LOCAL (CLV)
                           </span>
-                          <span className="text-white/70">
+                          <span className="text-white/80 font-bold text-[9px]">
                             {clvs.length} {clvs.length === 1 ? 'asignado' : 'asignados'}
                           </span>
                         </div>
@@ -513,14 +485,14 @@ export const GestoresView: React.FC = () => {
                           {clvs.map((clv, clvIdx) => (
                             <div
                               key={clv.id}
-                              className="px-2 py-1.5 rounded-lg bg-emerald-950/20 border border-emerald-500/20 hover:border-emerald-400/40 flex items-center justify-between gap-2 transition-all"
+                              className="px-2 py-1.5 rounded-lg bg-emerald-950/30 border border-emerald-500/30 hover:border-emerald-400/50 flex items-center justify-between gap-2 transition-all"
                             >
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-1.5">
-                                  <span className="w-3.5 h-3.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[8.5px] font-black flex items-center justify-center shrink-0">
+                                  <span className="w-3.5 h-3.5 rounded-full bg-emerald-500/30 text-emerald-200 text-[8.5px] font-black flex items-center justify-center shrink-0">
                                     {clvIdx + 1}
                                   </span>
-                                  <span className="px-1 py-0.2 rounded text-[7.5px] font-black uppercase bg-emerald-500/25 text-emerald-200 border border-emerald-400/30 shrink-0">
+                                  <span className="px-1.5 py-0.2 rounded text-[8px] font-black uppercase bg-emerald-500/30 text-emerald-200 border border-emerald-400/50 shrink-0">
                                     CLV
                                   </span>
                                   <span className="text-[10.5px] font-bold uppercase tracking-wider text-white truncate drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
@@ -571,12 +543,12 @@ export const GestoresView: React.FC = () => {
                     {/* 3. RESPONSABLES DE LOCAL (RLV) ASIGNADOS */}
                     {rlvs.length > 0 && (
                       <div className="space-y-1 pt-0.5">
-                        <div className="flex items-center justify-between text-[9.5px] font-bold uppercase tracking-wider text-indigo-300 px-0.5">
-                          <span className="flex items-center gap-1">
-                            <Shield className="w-3 h-3 text-indigo-400" />
-                            Responsables de Local (RLV)
+                        <div className="flex items-center justify-between text-[10px] px-0.5">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-indigo-500/30 text-indigo-200 border border-indigo-400/60 shadow-xs">
+                            <Shield className="w-3 h-3 text-indigo-300" />
+                            RESPONSABLES DE LOCAL (RLV)
                           </span>
-                          <span className="text-white/70">
+                          <span className="text-white/80 font-bold text-[9px]">
                             {rlvs.length} {rlvs.length === 1 ? 'asignado' : 'asignados'}
                           </span>
                         </div>
@@ -586,14 +558,14 @@ export const GestoresView: React.FC = () => {
                           {rlvs.map((rlv, rlvIdx) => (
                             <div
                               key={rlv.id}
-                              className="px-2 py-1.5 rounded-lg bg-indigo-950/25 border border-indigo-500/25 hover:border-indigo-400/45 flex items-center justify-between gap-2 transition-all"
+                              className="px-2 py-1.5 rounded-lg bg-indigo-950/30 border border-indigo-500/30 hover:border-indigo-400/50 flex items-center justify-between gap-2 transition-all"
                             >
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-1.5">
-                                  <span className="w-3.5 h-3.5 rounded-full bg-indigo-500/25 text-indigo-300 text-[8.5px] font-black flex items-center justify-center shrink-0">
+                                  <span className="w-3.5 h-3.5 rounded-full bg-indigo-500/30 text-indigo-200 text-[8.5px] font-black flex items-center justify-center shrink-0">
                                     {rlvIdx + 1}
                                   </span>
-                                  <span className="px-1 py-0.2 rounded text-[7.5px] font-black uppercase bg-indigo-500/30 text-indigo-200 border border-indigo-400/35 shrink-0">
+                                  <span className="px-1.5 py-0.2 rounded text-[8px] font-black uppercase bg-indigo-500/35 text-indigo-200 border border-indigo-400/40 shrink-0">
                                     RLV
                                   </span>
                                   <span className="text-[10.5px] font-bold uppercase tracking-wider text-white truncate drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
@@ -649,10 +621,10 @@ export const GestoresView: React.FC = () => {
 
                       return (
                         <div className="space-y-1 pt-0.5">
-                          <div className="flex items-center justify-between text-[9.5px] font-bold uppercase tracking-wider text-amber-300 px-0.5">
-                            <span className="flex items-center gap-1">
-                              <CheckCircle2 className="w-3 h-3 text-amber-400" />
-                              Coordinadores de Mesa (CM)
+                          <div className="flex items-center justify-between text-[10px] px-0.5">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-amber-500/30 text-amber-200 border border-amber-400/60 shadow-xs">
+                              <CheckCircle2 className="w-3 h-3 text-amber-300" />
+                              COORDINADORES DE MESA (CM)
                             </span>
                             <div className="flex items-center gap-2">
                               <span className="text-white/70">
@@ -690,7 +662,7 @@ export const GestoresView: React.FC = () => {
                                     <span className="w-3.5 h-3.5 rounded-full bg-amber-500/20 text-amber-300 text-[8.5px] font-black flex items-center justify-center shrink-0">
                                       {cmIdx + 1}
                                     </span>
-                                    <span className="px-1 py-0.2 rounded text-[7.5px] font-black uppercase bg-amber-500/30 text-amber-200 border border-amber-400/35 shrink-0">
+                                    <span className="px-1.5 py-0.2 rounded text-[8px] font-black uppercase bg-amber-500/35 text-amber-200 border border-amber-400/40 shrink-0">
                                       CM
                                     </span>
                                     <span className="text-[10.5px] font-bold uppercase tracking-wider text-white truncate drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
@@ -750,6 +722,77 @@ export const GestoresView: React.FC = () => {
                         </div>
                       );
                     })()}
+
+                    {/* 5. AUXILIARES PARA REPLIEGUE DE ACTAS (ARA) ASIGNADOS */}
+                    {aras.length > 0 && (
+                      <div className="space-y-1 pt-0.5">
+                        <div className="flex items-center justify-between text-[10px] px-0.5">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-rose-500/30 text-rose-200 border border-rose-400/60 shadow-xs">
+                            <Users className="w-3 h-3 text-rose-300" />
+                            AUXILIARES PARA REPLIEGUE DE ACTAS (ARA)
+                          </span>
+                          <span className="text-white/80 font-bold text-[9px]">
+                            {aras.length} {aras.length === 1 ? 'asignado' : 'asignados'}
+                          </span>
+                        </div>
+
+                        {/* List of ARAs */}
+                        <div className="space-y-1">
+                          {aras.map((ara, araIdx) => (
+                            <div
+                              key={ara.id}
+                              className="px-2 py-1.5 rounded-lg bg-rose-950/30 border border-rose-500/30 hover:border-rose-400/50 flex items-center justify-between gap-2 transition-all"
+                            >
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="w-3.5 h-3.5 rounded-full bg-rose-500/30 text-rose-200 text-[8.5px] font-black flex items-center justify-center shrink-0">
+                                    {araIdx + 1}
+                                  </span>
+                                  <span className="px-1.5 py-0.2 rounded text-[8px] font-black uppercase bg-rose-500/35 text-rose-200 border border-rose-400/40 shrink-0">
+                                    ARA
+                                  </span>
+                                  <span className="text-[10.5px] font-bold uppercase tracking-wider text-white truncate drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
+                                    {ara.nombreCompleto}
+                                  </span>
+                                </div>
+                                <div className="pl-5 mt-0.5 flex items-center gap-1.5 flex-wrap">
+                                  <span className="font-mono text-[10px] font-semibold text-rose-200 shrink-0">
+                                    {ara.telefonoRaw || ara.telefono}
+                                  </span>
+                                  <span
+                                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[8.5px] font-medium text-rose-100 bg-rose-950/60 border border-rose-400/35 max-w-full"
+                                    title={`Lugar / Zona: ${ara.lugar || ara.distrito}`}
+                                  >
+                                    <Building className="w-2.5 h-2.5 text-rose-400 shrink-0" />
+                                    <span className="truncate">Lugar: {ara.lugar || ara.distrito}</span>
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Direct action buttons for ARA */}
+                              <div className="flex items-center gap-1 shrink-0">
+                                <button
+                                  type="button"
+                                  onClick={() => callContact(ara.telefono, ara.nombreCompleto, 'ARA', distrito.nombre)}
+                                  className="w-[26px] h-[26px] rounded-md bg-gradient-to-b from-rose-500 to-red-600 hover:from-rose-400 hover:to-red-500 flex items-center justify-center text-white active:scale-95 shadow-xs transition-transform"
+                                  title={`Llamar a ${ara.nombreCompleto} (${ara.telefono})`}
+                                >
+                                  <Phone className="w-2.5 h-2.5 fill-current" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => sendWhatsApp(ara.telefono, ara.nombreCompleto, 'ARA', distrito.nombre)}
+                                  className="w-[26px] h-[26px] rounded-md bg-emerald-600/30 hover:bg-emerald-600/40 border border-emerald-400/30 flex items-center justify-center active:scale-95 transition-transform shadow-xs"
+                                  title={`WhatsApp a ${ara.nombreCompleto}`}
+                                >
+                                  <WhatsAppAppIcon size={16} />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               );

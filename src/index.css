@@ -22,6 +22,20 @@ html, body {
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
   overscroll-behavior-y: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* GPU Acceleration & Performance optimizations for budget mobile phones */
+.gpu-layer {
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: transform;
+}
+
+.fast-list-item {
+  content-visibility: auto;
+  contain-intrinsic-size: 64px;
 }
 
 @keyframes wallpaperFade {

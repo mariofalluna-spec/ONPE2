@@ -1147,15 +1147,22 @@ function normalizeDistrictName(name: string): string {
     .trim();
 }
 
+const rlvByDistritoCache = new Map<string, RLVInfo[]>();
+
 /**
- * Obtiene los RLV asignados a un distrito específico
+ * Obtiene los RLV asignados a un distrito específico (con cache en memoria para rendimiento instantáneo)
  */
 export function getRLVsByDistrito(distritoNombre: string): RLVInfo[] {
   const normalized = normalizeDistrictName(distritoNombre);
-  return LISTA_RLV.filter(rlv => {
+  if (rlvByDistritoCache.has(normalized)) {
+    return rlvByDistritoCache.get(normalized)!;
+  }
+  const result = LISTA_RLV.filter(rlv => {
     const rlvNorm = normalizeDistrictName(rlv.distrito);
     return rlvNorm === normalized || rlvNorm.replace(/\s+/g, '') === normalized.replace(/\s+/g, '');
   });
+  rlvByDistritoCache.set(normalized, result);
+  return result;
 }
 
 /**

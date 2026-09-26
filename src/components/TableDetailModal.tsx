@@ -15,6 +15,7 @@ export const TableDetailModal: React.FC = () => {
     callContact,
     sendWhatsApp,
     addAsignadoToMesa,
+    layoutMode,
   } = useElectoral();
 
   const [showAddForm, setShowAddForm] = useState(false);
@@ -70,7 +71,9 @@ export const TableDetailModal: React.FC = () => {
     >
       <div
         id="modal-table-detail-container"
-        className="w-full max-w-lg max-h-[92vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl transition-all border border-white/20 bg-white/5 backdrop-blur-xl text-white shadow-black/30"
+        className={`w-full max-h-[92vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl transition-all border border-white/20 bg-slate-950/95 backdrop-blur-2xl text-white shadow-black/80 ${
+          layoutMode === 'pc' ? 'max-w-5xl' : 'max-w-lg'
+        }`}
       >
         {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b border-white/20 mb-4">
@@ -93,13 +96,17 @@ export const TableDetailModal: React.FC = () => {
             type="button"
             onClick={() => setSelectedMesa(null)}
             aria-label="Cerrar ficha"
-            className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-colors border border-white/15"
+            className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-colors border border-white/15 cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Local de Votación & Room Info */}
+        {/* Responsive Grid for PC vs Mobile */}
+        <div className={layoutMode === 'pc' ? 'grid grid-cols-1 lg:grid-cols-2 gap-4' : 'space-y-4'}>
+          {/* Column 1: Local & Coordinadores */}
+          <div className="space-y-4">
+            {/* Local de Votación & Room Info */}
         <div className="space-y-1.5 mb-4 p-3.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-xs text-white shadow-xs">
           <div className="flex items-center gap-2">
             <Building className="w-4 h-4 text-cyan-300 shrink-0 drop-shadow-sm" />
@@ -310,9 +317,12 @@ export const TableDetailModal: React.FC = () => {
             </div>
           );
         })()}
+          </div>
 
-        {/* 1.4 COORDINADORES DE MESA (CM) DEL DISTRITO */}
-        {(() => {
+          {/* Column 2: CMs, Miembros de Mesa, Otros Asignados */}
+          <div className="space-y-4">
+            {/* 1.4 COORDINADORES DE MESA (CM) DEL DISTRITO */}
+            {(() => {
           const districtCMs = getCMsByDistrito(selectedMesa.distrito);
           if (!districtCMs || districtCMs.length === 0) return null;
 
@@ -594,6 +604,8 @@ export const TableDetailModal: React.FC = () => {
               No hay otros asignados registrados para esta mesa aún. Puedes agregar uno con el botón "+ Agregar Asignado".
             </p>
           )}
+        </div>
+          </div>
         </div>
       </div>
     </div>

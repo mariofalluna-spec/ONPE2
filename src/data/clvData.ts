@@ -680,6 +680,68 @@ export const LISTA_CLV: CLVInfo[] = [
     distrito: 'Vista Alegre',
     provincia: 'Nasca',
   },
+
+  // PALPA (5)
+  {
+    id: 'clv-55',
+    apellidoPaterno: 'MOSCAIZA',
+    nombres: 'CHRISTIAAN LUIS',
+    nombreCompleto: 'CHRISTIAAN MOSCAIZA',
+    telefono: '+51944392904',
+    telefonoRaw: '944392904',
+    localVotacion: 'IE FERMIN TANGUIS',
+    cargo: 'CLV',
+    distrito: 'Palpa',
+    provincia: 'Palpa',
+  },
+  {
+    id: 'clv-56',
+    apellidoPaterno: 'CASTILLO',
+    nombres: 'LUIS ANTONIO',
+    nombreCompleto: 'LUIS CASTILLO',
+    telefono: '+51956972483',
+    telefonoRaw: '956972483',
+    localVotacion: 'IE 22401 LLIPATA ALTA',
+    cargo: 'CLV',
+    distrito: 'Llipata',
+    provincia: 'Palpa',
+  },
+  {
+    id: 'clv-57',
+    apellidoPaterno: 'ROJAS',
+    nombres: 'YSRAEL OMAR',
+    nombreCompleto: 'YSRAEL ROJAS',
+    telefono: '+51992703100',
+    telefonoRaw: '992703100',
+    localVotacion: 'IE SAN MARTIN DE PORRES',
+    cargo: 'CLV',
+    distrito: 'Río Grande',
+    provincia: 'Palpa',
+  },
+  {
+    id: 'clv-58',
+    apellidoPaterno: 'MEDINA',
+    nombres: 'ERNESTO FELIPE',
+    nombreCompleto: 'ERNESTO MEDINA',
+    telefono: '+51939102488',
+    telefonoRaw: '939102488',
+    localVotacion: 'IE 22405 SANTA CRUZ',
+    cargo: 'CLV',
+    distrito: 'Santa Cruz',
+    provincia: 'Palpa',
+  },
+  {
+    id: 'clv-59',
+    apellidoPaterno: 'GONZALES',
+    nombres: 'PATRICIA ELENA',
+    nombreCompleto: 'PATRICIA GONZALES',
+    telefono: '+51956382109',
+    telefonoRaw: '956382109',
+    localVotacion: 'IE 22408 TIBILLO',
+    cargo: 'CLV',
+    distrito: 'Tibillo',
+    provincia: 'Palpa',
+  },
 ];
 
 /**
@@ -693,15 +755,22 @@ function normalizeDistrictName(name: string): string {
     .trim();
 }
 
+const clvByDistritoCache = new Map<string, CLVInfo[]>();
+
 /**
- * Obtiene los CLV asignados a un distrito específico
+ * Obtiene los CLV asignados a un distrito específico (con cache en memoria para rendimiento instantáneo)
  */
 export function getCLVsByDistrito(distritoNombre: string): CLVInfo[] {
   const normalized = normalizeDistrictName(distritoNombre);
-  return LISTA_CLV.filter(clv => {
+  if (clvByDistritoCache.has(normalized)) {
+    return clvByDistritoCache.get(normalized)!;
+  }
+  const result = LISTA_CLV.filter(clv => {
     const clvNorm = normalizeDistrictName(clv.distrito);
     return clvNorm === normalized || clvNorm.replace(/\s+/g, '') === normalized.replace(/\s+/g, '');
   });
+  clvByDistritoCache.set(normalized, result);
+  return result;
 }
 
 /**
